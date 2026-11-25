@@ -18,7 +18,7 @@ The long-term goal is to integrate local LLMs, persistent data storage, intellig
 
 ## Current Development Status
 
-Phase 4.1–4.6 implementation and testing are complete. Version 0.4.0 is prepared for release; see Git tags for published milestones.
+Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
 
 - Five operational agents
 - A2A JSON-RPC communication
@@ -346,7 +346,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 1 | A2A Foundation | Completed |
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
-| 4 | Supervisor Agent and Architecture | Implementation and testing complete; release pending |
+| 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
 | 5 | Local LLM Integration | Planned |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |

@@ -52,10 +52,10 @@ Current development environment:
 - Editor: Visual Studio Code
 - Terminal: PowerShell
 - Python: 3.14.7
-- CPU: Intel Core i5-13450HX
-- RAM: 16GB DDR5
-- GPU: NVIDIA RTX 5050
-- VRAM: 8GB
+- CPU: Intel Core i5-12450H
+- RAM: 16GB
+- GPU: NVIDIA GeForce RTX 4050 Laptop GPU
+- VRAM: 6GB
 
 Local project directory:
 
@@ -104,7 +104,7 @@ Architecture requirements:
 
 ## 6. Current Implementation Baseline
 
-Baseline: Phase 4 / v0.4.0 release candidate (implementation and testing complete; GitHub release pending).
+Baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
 Implemented agents:
 

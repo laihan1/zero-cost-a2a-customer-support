@@ -8,7 +8,7 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 
 ## Current Progress
 
-- Development stage: Phase 4.1–4.6 implementation and testing complete; release pending
+- Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
 - Implemented agents: 5
 - Planned agents: 5
 - Automated tests: 126/126 passed
@@ -59,7 +59,7 @@ Target version: v0.3.0
 
 ## Phase 4 — Supervisor Agent and Architecture Refactoring
 
-Target version: v0.4.0
+Published version: v0.4.0
 
 ### Phase 4.1 — Shared A2A Client and Agent Registry
 
@@ -123,8 +123,8 @@ Target version: v0.4.0
 - [x] Add logging configuration tests
 - [x] Pass all 126 regression tests
 - [x] Update documentation
-- [ ] Push to GitHub
-- [ ] Create milestone version tag
+- [x] Push `main` to GitHub
+- [x] Create and push the `v0.4.0` milestone tag
 
 ## Phase 5 — Local LLM Integration
 

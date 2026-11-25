@@ -4,7 +4,7 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 ## [Unreleased]
 
-## [0.4.0] — Supervisor Architecture (release pending)
+## [0.4.0] — Supervisor Architecture
 
 ### Added
 
@@ -76,7 +76,8 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 ### Release Status
 
-- GitHub push, merge and milestone tag pending.
+- Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
+- The `main` branch and `v0.4.0` tag were pushed to GitHub.
 
 ## [0.3.0] — Multi-Agent Collaboration
 
