@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 
 from a2a.server.agent_execution import AgentExecutor, RequestContext
@@ -13,6 +15,9 @@ from shared.response_schema import AgentResponse
 from shared.response_message import create_response_message
 
 
+logger = logging.getLogger(__name__)
+
+
 class RefundAgentExecutor(AgentExecutor):
 
     async def execute(
@@ -25,6 +30,9 @@ class RefundAgentExecutor(AgentExecutor):
         order_id = extract_order_id(user_message)
 
         if not order_id:
+
+            logger.info("Handling refund policy enquiry")
+
             response = AgentResponse(
                 agent="refund",
                 success=True,
@@ -34,9 +42,17 @@ class RefundAgentExecutor(AgentExecutor):
 
         else:
             try:
+
+                logger.info(
+                    "Requesting order status from order agent"
+                )
+
                 status = await get_order_status(order_id)
 
+                logger.info("Order status response received")
+
                 if status == "Not Found":
+
                     response = AgentResponse(
                         agent="refund",
                         success=False,
@@ -70,7 +86,13 @@ class RefundAgentExecutor(AgentExecutor):
                         )
                     )
 
-            except (httpx.HTTPError, RuntimeError):
+            except (httpx.HTTPError, RuntimeError) as exc:
+
+                logger.warning(
+                    "Order verification failed: error=%s",
+                    type(exc).__name__
+                )
+
                 response = AgentResponse(
                     agent="refund",
                     success=False,

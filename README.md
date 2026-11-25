@@ -2,10 +2,10 @@
 
 A multi-agent customer support system built using the Agent-to-Agent (A2A) Protocol, designed to demonstrate practical AI engineering and agent collaboration without relying on paid AI APIs.
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue)
+![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-77%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-126%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -18,13 +18,7 @@ The long-term goal is to integrate local LLMs, persistent data storage, intellig
 
 ## Current Development Status
 
-The project is currently in Phase 4: Supervisor Agent and Architecture.
-
-Phase 4.1: Shared A2A Client and Agent Registry is completed.
-
-Phase 4.2: Supervisor Agent is completed.
-
-Phase 4.3: Support Agent Routing Refactoring is completed.
+Phase 4.1–4.6 implementation and testing are complete. Version 0.4.0 is prepared for release; see Git tags for published milestones.
 
 - Five operational agents
 - A2A JSON-RPC communication
@@ -36,8 +30,10 @@ Phase 4.3: Support Agent Routing Refactoring is completed.
 - Centralized orchestration through Supervisor Agent
 - Rule-based Supervisor intent detection
 - Multi-agent collaboration
-- Basic service failure handling
-- 58 automated tests passed
+- Native A2A Text and Data Parts
+- Centralized error handling and response validation
+- Configurable console logging
+- 126 automated tests passed
 - No paid AI API dependency
 
 Local LLM integration, database integration, and frontend development are planned for upcoming phases.
@@ -102,9 +98,13 @@ Common communication components are centralized in the shared package.
 | config.py | Centralized ports, URLs and timeout settings |
 | agent_registry.py | Centralized agent registration and URL lookup |
 | agent_discovery.py | Agent Card discovery |
-| a2a_client.py | Reusable A2A communication client |
+| a2a_client.py | Reusable A2A communication client and response validation |
+| response_schema.py | Standardized AgentResponse schema |
+| response_message.py | Native A2A response message builder |
+| exceptions.py | Shared communication exceptions |
+| logging_config.py | Centralized console logging |
 
-The Support Agent and Refund Agent reuse these shared components to reduce duplicated code and improve maintainability.
+The Supervisor Agent and Refund Agent reuse these shared components to reduce duplicated code and improve maintainability.
 
 ### Structured Agent Responses
 
@@ -121,7 +121,19 @@ The Refund Agent communicates with the Order Agent to retrieve order status befo
 
 ### Service Failure Handling
 
-The system provides fallback responses when specialist agent services are unavailable.
+The shared communication layer handles connection failures, timeouts, invalid JSON, malformed Agent Cards and response parts, and JSON-RPC errors. HTTP status errors retain their native HTTPX exception type. Structured responses are validated before use.
+
+The Supervisor and Refund Agents preserve their existing fallback messages and error codes (`AGENT_UNAVAILABLE` and `ORDER_AGENT_UNAVAILABLE`). A specialist service failure does not prevent unrelated agents from handling requests.
+
+### Logging
+
+All five agent entry points configure Python console logging. The default level is INFO. To enable DEBUG, set the environment variable before starting an agent:
+
+```powershell
+$env:LOG_LEVEL = "DEBUG"
+```
+
+Set it back to `INFO` for normal operation. Application logs record routing, discovery, communication outcomes and error types without intentionally logging customer messages, order IDs or full response payloads. External library logs are not covered by this guarantee.
 
 ### Zero Paid API Cost
 
@@ -185,30 +197,30 @@ python -m pip install -r requirements.txt
 
 ### 4. Start the Agent Services
 
-Open five our separate terminals in the project root and activate the virtual environment in each terminal.
+Open five separate terminals in the project root and activate the virtual environment in each terminal.
 
 Terminal 1 — Support Agent
 
 ```powershell
-python agents/support_agent/main.py
+python -m agents.support_agent.main
 ```
 
 Terminal 2 — Order Agent
 
 ```powershell
-python agents/order_agent/main.py
+python -m agents.order_agent.main
 ```
 
 Terminal 3 — Refund Agent
 
 ```powershell
-python agents/refund_agent/main.py
+python -m agents.refund_agent.main
 ```
 
 Terminal 4 — Product Agent
 
 ```powershell
-python agents/product_agent/main.py
+python -m agents.product_agent.main
 ```
 Terminal 5 — Supervisor Agent
 
@@ -216,7 +228,7 @@ Terminal 5 — Supervisor Agent
 python -m agents.supervisor_agent.main
 ```
 
-Keep all four agent services running.
+Keep all five agent services running.
 
 All agents are started as Python modules from the project root.
 
@@ -256,7 +268,7 @@ Agent execution flow:
 ```mermaid
 sequenceDiagram
     participant C as Customer
-    participant S as Support Agent
+    participant S as Supervisor Agent
     participant R as Refund Agent
     participant O as Order Agent
 
@@ -280,7 +292,7 @@ The current implementation does not execute actual refund transactions or verify
 
 ## Automated Testing
 
-With all four agent services running, open another terminal, activate the virtual environment, and execute:
+With all five agent services running, open another terminal, activate the virtual environment, and execute:
 
 ```powershell
 python -m pytest tests/ -v
@@ -297,15 +309,19 @@ python -m pytest tests/ -v
 | Product Agent | 6 | 6 |
 | Product Integration | 6 | 6 |
 | Agent Registry | 6 | 6 |
-| Shared A2A Client | 5 | 5 |
-| Agent Discovery | 3 | 3 |
+| Shared A2A Client | 25 | 25 |
+| Agent Discovery | 14 | 14 |
 | Supervisor Logic | 11 | 11 |
 | Supervisor Integration | 5 | 5 |
 | Structured Response Unit Tests | 9 | 9 |
 | Structured Integration Tests | 6 | 6 |
-| Total | 77 | 77 |
+| Executor Failure Tests | 12 | 12 |
+| Logging Configuration | 6 | 6 |
+| Total | 126 | 126 |
 
 Test pass rate: 100% for the current test suite.
+
+Manual checks also covered Order Agent shutdown, Supervisor and Refund fallback responses, continued Product Agent operation, console logging, and recovery after restarting Order Agent.
 
 These results verify the implemented test scenarios and do not represent complete code coverage or production readiness.
 
@@ -330,7 +346,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 1 | A2A Foundation | Completed |
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
-| 4 | Supervisor Agent and Architecture | In Progress |
+| 4 | Supervisor Agent and Architecture | Implementation and testing complete; release pending |
 | 5 | Local LLM Integration | Planned |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |

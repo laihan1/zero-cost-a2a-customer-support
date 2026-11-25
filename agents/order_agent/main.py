@@ -1,5 +1,7 @@
 import uvicorn
 
+from shared.logging_config import configure_logging
+
 from starlette.applications import Starlette
 
 from a2a.server.request_handlers import DefaultRequestHandler
@@ -20,6 +22,8 @@ from agents.order_agent.agent_executor import OrderAgentExecutor
 
 
 def main():
+
+    configure_logging()
 
     order_skill = AgentSkill(
         id="order_tracking",

@@ -80,7 +80,7 @@ Verify dependency compatibility before upgrading packages.
 
 The project uses a modular multi-agent architecture.
 
-Planned agent responsibilities:
+Implemented agent responsibilities:
 
 | Agent | Responsibility |
 |---|---|
@@ -104,7 +104,7 @@ Architecture requirements:
 
 ## 6. Current Implementation Baseline
 
-Baseline: Phase 3 / v0.3.0.
+Baseline: Phase 4 / v0.4.0 release candidate (implementation and testing complete; GitHub release pending).
 
 Implemented agents:
 
@@ -114,6 +114,7 @@ Implemented agents:
 | Order Agent | 9998 |
 | Refund Agent | 9997 |
 | Product Agent | 9996 |
+| Supervisor Agent | 9995 |
 
 Current capabilities:
 
@@ -125,14 +126,18 @@ Current capabilities:
 - Preliminary refund eligibility.
 - Product information and recommendations.
 - Refund Agent to Order Agent collaboration.
-- Basic service failure handling.
+- Centralized Supervisor routing and orchestration.
+- Shared A2A client, registry, discovery and configuration.
+- Native A2A Text and Data Parts using AgentResponse.
+- Centralized communication error handling and structured response validation.
+- Configurable console logging using LOG_LEVEL (default INFO).
 
 Last verified test result at this baseline:
 
-- 32 automated tests passed.
+- 126 automated tests passed.
 - 0 failed tests.
 
-This is a historical baseline. Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
+This baseline reflects the latest reported Phase 4 regression results. Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
 ## 7. A2A SDK Compatibility
 
@@ -148,11 +153,7 @@ Verified implementation details:
 - Agent Card interface field: supportedInterfaces
 - Text message helper: a2a.helpers.new_text_message
 
-Current text response extraction:
-
-```python
-result["result"]["message"]["parts"][0]["text"]
-```
+Current response extraction uses `shared.a2a_client`: `call_agent` finds the first text part, while `call_agent_data_by_name` validates the structured Data Part before returning it.
 
 Do not assume that examples from older A2A SDK versions are compatible.
 
@@ -193,7 +194,7 @@ Current regression test command:
 python -m pytest tests/ -v
 ```
 
-At the Phase 3 baseline, integration tests require the relevant agent services to be running.
+Integration tests require all five agent services to be running. Start each from the project root using `python -m agents.<agent_name>.main`. Mocked communication failure and logging tests do not require running services.
 
 Testing requirements:
 
@@ -203,6 +204,8 @@ Testing requirements:
 - Test missing data.
 - Test unavailable agent services.
 - Test communication failures.
+- Preserve existing text responses and customer-facing error codes.
+- Verify real offline behavior, fault isolation and recovery for major communication changes.
 - Test routing accuracy.
 - Test LLM output validation when implemented.
 
@@ -279,6 +282,8 @@ Additional requirements:
 - Protect against prompt injection.
 - Apply appropriate timeouts.
 - Avoid exposing unnecessary internal information.
+- Do not intentionally log customer messages, order IDs, credentials or full response payloads.
+- Use shared communication exceptions and logging; preserve native HTTP status errors and existing fallback codes.
 - Use synthetic data in public demonstrations.
 - Require appropriate authentication and authorization before handling private data or sensitive operations.
 
@@ -390,14 +395,11 @@ Verify existing Git tags before creating new tags.
 
 ## 17. Known Technical Limitations
 
-At the Phase 3 baseline:
+At the Phase 4 baseline:
 
 - Keyword-based intent routing.
 - Hardcoded mock data.
 - Predefined Agent Card URLs.
-- Duplicated communication logic.
-- Fragile text-based response parsing.
-- Limited error handling.
 - Manual service startup.
 - No local LLM integration.
 - No persistent database.
@@ -407,7 +409,8 @@ At the Phase 3 baseline:
 - Task cancellation is not implemented.
 - Refund delivery dates are not verified.
 - No actual refund transactions.
-- Limited automated failure scenario coverage.
+- Automated tests do not cover every failure scenario.
+- No automatic retry or complete A2A task response handling.
 - Clean environment installation has not been fully verified.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.

@@ -1,5 +1,5 @@
 import uvicorn
-
+from shared.logging_config import configure_logging
 from starlette.applications import Starlette
 
 from a2a.server.request_handlers import DefaultRequestHandler
@@ -20,6 +20,8 @@ from agents.support_agent.agent_executor import SupportAgentExecutor
 
 
 def main():
+
+    configure_logging()
 
     # 1. Define the agent's skill
     support_skill = AgentSkill(

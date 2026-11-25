@@ -1,5 +1,7 @@
 import uvicorn
 
+from shared.logging_config import configure_logging
+
 from starlette.applications import Starlette
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.routes import (
@@ -18,6 +20,8 @@ from agents.product_agent.agent_executor import ProductAgentExecutor
 
 
 def main():
+
+    configure_logging()
 
     product_skill = AgentSkill(
         id="product_management",

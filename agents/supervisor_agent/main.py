@@ -1,5 +1,5 @@
 import uvicorn
-
+from shared.logging_config import configure_logging
 from starlette.applications import Starlette
 
 from a2a.server.request_handlers import DefaultRequestHandler
@@ -21,6 +21,8 @@ from shared.config import SUPERVISOR_PORT, SUPERVISOR_URL
 
 
 def main():
+
+    configure_logging()
 
     # 1. Define the agent's skill
     supervisor_skill = AgentSkill(

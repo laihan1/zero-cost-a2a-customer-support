@@ -4,6 +4,8 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 ## [Unreleased]
 
+## [0.4.0] — Supervisor Architecture (release pending)
+
 ### Added
 
 - Centralized Agent Registry.
@@ -26,6 +28,9 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Shared A2A response message builder.
 - Native A2A structured Data Part support.
 - Structured response unit and integration tests.
+- Shared communication exceptions and centralized console logging.
+- Configurable LOG_LEVEL environment variable.
+- 49 additional discovery, client, executor failure and logging tests.
 
 ### Changed
 
@@ -43,6 +48,9 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Replaced refund order status text parsing with structured data access.
 - Updated Supervisor Agent to forward complete structured responses.
 - Preserved backward compatibility with existing text responses.
+- Validated Agent Cards, response parts and structured response fields.
+- Improved text extraction to find the first text part.
+- Preserved existing customer-facing fallback messages and error codes.
 
 ### Removed
 
@@ -63,12 +71,12 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Added 6 structured integration tests.
 - Total: 77/77 automated tests passed.
 
-### Planned
+- Phase 4.5–4.6: 126/126 automated tests passed.
+- Manual Order Agent offline, fault isolation, logging and recovery checks passed.
 
-- Improved error handling and response validation.
-- Centralized logging.
-- Additional offline and regression tests.
-- Phase 4 milestone release.
+### Release Status
+
+- GitHub push, merge and milestone tag pending.
 
 ## [0.3.0] — Multi-Agent Collaboration
 
