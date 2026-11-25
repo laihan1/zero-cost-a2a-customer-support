@@ -1,6 +1,8 @@
 import httpx
 import uuid
 
+from shared.config import SUPERVISOR_URL
+
 
 def send_message(message):
 
@@ -18,7 +20,7 @@ def send_message(message):
     }
 
     response = httpx.post(
-        "http://127.0.0.1:9999/",
+        f"{SUPERVISOR_URL}/",
         json=payload,
         headers={
             "Content-Type": "application/json",

@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.3.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-58%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-62%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -23,6 +23,8 @@ The project is currently in Phase 4: Supervisor Agent and Architecture.
 Phase 4.1: Shared A2A Client and Agent Registry is completed.
 
 Phase 4.2: Supervisor Agent is completed.
+
+Phase 4.3: Support Agent Routing Refactoring is completed.
 
 - Five operational agents
 - A2A JSON-RPC communication
@@ -55,15 +57,11 @@ flowchart TD
     ProductData[(Mock Product Data)]
 
     Customer --> Supervisor
-    Customer -. Legacy entry point .-> Support
     Supervisor --> Support
     Supervisor --> Order
     Supervisor --> Refund
     Supervisor --> Product
     Support --> FAQ
-    Support --> Order
-    Support --> Refund
-    Support --> Product
     Refund --> Order
     Order --> OrderData
     Product --> ProductData
@@ -73,7 +71,7 @@ flowchart TD
 
 | Agent | Port | Responsibility |
 |---|---:|---|
-| Support Agent | 9999 | Customer support, FAQ and request routing |
+| Support Agent | 9999 | Handles FAQ and general customer support questions |
 | Order Agent | 9998 | Order status and tracking information |
 | Refund Agent | 9997 | Refund policy and preliminary eligibility checks |
 | Product Agent | 9996 | Product information, pricing, stock and recommendations |
@@ -292,9 +290,9 @@ python -m pytest tests/ -v
 | Agent Registry | 6 | 6 |
 | Shared A2A Client | 5 | 5 |
 | Agent Discovery | 3 | 3 |
-| Supervisor Logic | 8 | 8 |
-| Supervisor Integration | 4 | 4 |
-| Total | 58 | 58 |
+| Supervisor Logic | 11 | 11 |
+| Supervisor Integration | 5 | 5 |
+| Total | 62 | 62 |
 
 Test pass rate: 100% for the current test suite.
 
@@ -313,7 +311,6 @@ These results verify the implemented test scenarios and do not represent complet
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.
 - Automated tests do not cover all failure scenarios.
-- Routing logic is temporarily duplicated between Support and Supervisor Agents.
 
 ## Development Roadmap
 

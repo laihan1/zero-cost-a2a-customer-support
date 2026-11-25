@@ -20,6 +20,8 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Eight Supervisor Logic tests.
 - Four Supervisor Integration tests.
 - One additional Agent Registry test.
+- Three additional Supervisor intent detection tests.
+- Support Agent isolation integration test.
 
 ### Changed
 
@@ -28,11 +30,17 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Standardized agent startup using Python module execution.
 - Removed the requirement for manual PYTHONPATH configuration.
 - Updated README and development roadmap.
+- Centralized all customer intent routing in Supervisor Agent.
+- Refactored Support Agent to handle FAQ questions only.
+- Updated existing integration tests to use Supervisor Agent as the main entry point.
+- Consolidated intent detection keywords.
 
 ### Removed
 
 - Duplicated A2A communication logic.
 - Legacy Support Agent discovery module.
+- Duplicated routing logic in Support Agent.
+- Unused Support Agent A2A client.
 
 ### Testing
 
@@ -42,6 +50,7 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Additional Supervisor Registry test: 1/1 passed.
 - Total: 58/58 automated tests passed.
 - All five agents successfully started.
+- Total: 62/62 automated tests passed.
 
 ### Planned
 

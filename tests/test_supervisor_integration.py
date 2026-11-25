@@ -30,3 +30,14 @@ def test_supervisor_product():
 def test_supervisor_support():
     response = ask_supervisor("What are your opening hours?")
     assert "Monday to Friday" in response
+
+def test_support_does_not_route():
+    response = asyncio.run(
+        call_agent_by_name(
+            "support",
+            "Where is my order ORD001?"
+        )
+    )
+
+    assert "Could you provide more details" in response
+    assert "Status: Shipped" not in response
