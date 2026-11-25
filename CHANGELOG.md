@@ -13,6 +13,13 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Five Agent Registry tests.
 - Five shared A2A Client tests.
 - Three Agent Discovery tests.
+- Supervisor Agent running on port 9995.
+- Rule-based Supervisor intent detection.
+- Centralized agent orchestration.
+- Supervisor Agent registration and Agent Card.
+- Eight Supervisor Logic tests.
+- Four Supervisor Integration tests.
+- One additional Agent Registry test.
 
 ### Changed
 
@@ -29,16 +36,15 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 ### Testing
 
-- Existing automated tests: 32/32 passed.
-- Agent Registry: 5/5 passed.
-- Shared A2A Client: 5/5 passed.
-- Agent Discovery: 3/3 passed.
-- Total: 45/45 automated tests passed.
-- All four agents successfully started using the new startup commands.
+- Phase 4.1 automated tests: 45/45 passed.
+- Supervisor Logic: 8/8 passed.
+- Supervisor Integration: 4/4 passed.
+- Additional Supervisor Registry test: 1/1 passed.
+- Total: 58/58 automated tests passed.
+- All five agents successfully started.
 
 ### Planned
 
-- Supervisor Agent
 - Improved intent routing
 - Structured agent responses
 - Enhanced error handling and logging

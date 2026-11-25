@@ -3,6 +3,7 @@ from shared.config import (
     ORDER_URL,
     REFUND_URL,
     PRODUCT_URL,
+    SUPERVISOR_URL,
 )
 
 AGENT_REGISTRY = {
@@ -10,6 +11,7 @@ AGENT_REGISTRY = {
     "order": ORDER_URL,
     "refund": REFUND_URL,
     "product": PRODUCT_URL,
+    "supervisor": SUPERVISOR_URL,
 }
 
 

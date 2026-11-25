@@ -8,12 +8,12 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 
 ## Current Progress
 
-- Development stage: Phase 4 in progress (Phase 4.1 completed)
-- Implemented agents: 4
+- Development stage: Phase 4 in progress (Phase 4.1 and 4.2 completed)
+- Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 45/45 passed
+- Automated tests: 58/58 passed
 - Paid AI API cost: RM0
-- Current architecture: Rule-based multi-agent system with shared A2A components
+- Current architecture: Supervisor-based multi-agent system with shared A2A components
 
 ## Phase 1 — A2A Foundation
 
@@ -75,9 +75,13 @@ Target version: v0.4.0
 
 ### Phase 4.2 — Supervisor Agent
 
-- [ ] Implement Supervisor Agent
-- [ ] Register Supervisor Agent
-- [ ] Implement centralized orchestration
+- [x] Implement Supervisor Agent
+- [x] Register Supervisor Agent
+- [x] Implement centralized orchestration
+- [x] Implement rule-based intent detection
+- [x] Implement Supervisor Agent Card and A2A server
+- [x] Add Supervisor unit and integration tests
+- [x] Pass all 58 regression tests
 
 ### Phase 4.3 — Support Agent Routing Refactoring
 

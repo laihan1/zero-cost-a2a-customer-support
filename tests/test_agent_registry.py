@@ -22,3 +22,6 @@ def test_product_agent_url():
 def test_unknown_agent():
     with pytest.raises(ValueError, match="Unknown agent"):
         get_agent_url("payment")
+
+def test_supervisor_agent_url():
+    assert get_agent_url("supervisor") == "http://127.0.0.1:9995"

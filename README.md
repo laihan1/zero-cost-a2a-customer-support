@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.3.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-45%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-58%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -22,26 +22,30 @@ The project is currently in Phase 4: Supervisor Agent and Architecture.
 
 Phase 4.1: Shared A2A Client and Agent Registry is completed.
 
-- Four operational agents
+Phase 4.2: Supervisor Agent is completed.
+
+- Five operational agents
 - A2A JSON-RPC communication
 - Centralized Agent Registry
 - Shared A2A Client
 - Shared Agent Card discovery
 - Centralized configuration
 - Unified agent startup commands
-- Rule-based intent routing
+- Centralized orchestration through Supervisor Agent
+- Rule-based Supervisor intent detection
 - Multi-agent collaboration
 - Basic service failure handling
-- 45 automated tests passed
+- 58 automated tests passed
 - No paid AI API dependency
 
-Supervisor Agent, local LLM integration, database integration, and frontend development are planned for upcoming phases.
+Local LLM integration, database integration, and frontend development are planned for upcoming phases.
 
 ## System Architecture
 
 ```mermaid
 flowchart TD
     Customer[Customer / Testing Client]
+    Supervisor[Supervisor Agent - Port 9995]
     Support[Support Agent - Port 9999]
     Order[Order Agent - Port 9998]
     Refund[Refund Agent - Port 9997]
@@ -50,12 +54,17 @@ flowchart TD
     OrderData[(Mock Order Data)]
     ProductData[(Mock Product Data)]
 
-    Customer --> Support
+    Customer --> Supervisor
+    Customer -. Legacy entry point .-> Support
+    Supervisor --> Support
+    Supervisor --> Order
+    Supervisor --> Refund
+    Supervisor --> Product
     Support --> FAQ
-    Support -->|A2A JSON-RPC| Order
-    Support -->|A2A JSON-RPC| Refund
-    Support -->|A2A JSON-RPC| Product
-    Refund -->|A2A JSON-RPC| Order
+    Support --> Order
+    Support --> Refund
+    Support --> Product
+    Refund --> Order
     Order --> OrderData
     Product --> ProductData
 ```
@@ -68,9 +77,13 @@ flowchart TD
 | Order Agent | 9998 | Order status and tracking information |
 | Refund Agent | 9997 | Refund policy and preliminary eligibility checks |
 | Product Agent | 9996 | Product information, pricing, stock and recommendations |
-| Supervisor Agent | Planned | Centralized orchestration and intelligent routing |
+| Supervisor Agent | 9995 | Centralized orchestration and rule-based intent routing |
 
 ## Key Features
+
+### Supervisor Agent
+
+The Supervisor Agent classifies customer enquiries and delegates requests to Support, Order, Refund, or Product Agents using the shared A2A communication layer.
 
 ### Agent-to-Agent Communication
 
@@ -165,7 +178,7 @@ python -m pip install -r requirements.txt
 
 ### 4. Start the Agent Services
 
-Open four separate terminals in the project root and activate the virtual environment in each terminal.
+Open five our separate terminals in the project root and activate the virtual environment in each terminal.
 
 Terminal 1 — Support Agent
 
@@ -190,6 +203,11 @@ Terminal 4 — Product Agent
 ```powershell
 python agents/product_agent/main.py
 ```
+Terminal 5 — Supervisor Agent
+
+```powershell
+python -m agents.supervisor_agent.main
+```
 
 Keep all four agent services running.
 
@@ -205,6 +223,7 @@ No manual PYTHONPATH configuration is required.
 | Order | http://127.0.0.1:9998/.well-known/agent-card.json |
 | Refund | http://127.0.0.1:9997/.well-known/agent-card.json |
 | Product | http://127.0.0.1:9996/.well-known/agent-card.json |
+| Supervisor | http://127.0.0.1:9995/.well-known/agent-card.json |
 
 ## Example Customer Enquiries
 
@@ -270,10 +289,12 @@ python -m pytest tests/ -v
 | Refund Integration | 5 | 5 |
 | Product Agent | 6 | 6 |
 | Product Integration | 6 | 6 |
-| Agent Registry | 5 | 5 |
+| Agent Registry | 6 | 6 |
 | Shared A2A Client | 5 | 5 |
 | Agent Discovery | 3 | 3 |
-| Total | 45 | 45 |
+| Supervisor Logic | 8 | 8 |
+| Supervisor Integration | 4 | 4 |
+| Total | 58 | 58 |
 
 Test pass rate: 100% for the current test suite.
 
@@ -292,6 +313,7 @@ These results verify the implemented test scenarios and do not represent complet
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.
 - Automated tests do not cover all failure scenarios.
+- Routing logic is temporarily duplicated between Support and Supervisor Agents.
 
 ## Development Roadmap
 
