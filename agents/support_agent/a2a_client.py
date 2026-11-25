@@ -4,11 +4,7 @@ import uuid
 from agent_discovery import discover_agent
 
 
-async def call_order_agent(user_message: str) -> str:
-
-    card_url = (
-        "http://127.0.0.1:9998/.well-known/agent-card.json"
-    )
+async def call_agent(card_url: str, user_message: str) -> str:
 
     url = await discover_agent(card_url)
 
@@ -20,16 +16,12 @@ async def call_order_agent(user_message: str) -> str:
             "message": {
                 "messageId": str(uuid.uuid4()),
                 "role": "ROLE_USER",
-                "parts": [
-                    {
-                        "text": user_message
-                    }
-                ]
+                "parts": [{"text": user_message}]
             }
         }
     }
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
 
         response = await client.post(
             url,
@@ -48,3 +40,26 @@ async def call_order_agent(user_message: str) -> str:
             raise RuntimeError(str(result["error"]))
 
         return result["result"]["message"]["parts"][0]["text"]
+
+
+async def call_order_agent(user_message: str) -> str:
+
+    return await call_agent(
+        "http://127.0.0.1:9998/.well-known/agent-card.json",
+        user_message
+    )
+
+
+async def call_refund_agent(user_message: str) -> str:
+
+    return await call_agent(
+        "http://127.0.0.1:9997/.well-known/agent-card.json",
+        user_message
+    )
+
+async def call_product_agent(user_message: str) -> str:
+
+    return await call_agent(
+        "http://127.0.0.1:9996/.well-known/agent-card.json",
+        user_message
+    )

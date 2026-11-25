@@ -70,3 +70,67 @@ def test_missing_order_id():
     assert "Please provide your order ID" in send_message(
         "Where is my order?"
     )
+
+def test_refund_policy():
+    assert "7 days" in send_message(
+        "What is your refund policy?"
+    )
+
+
+def test_refund_shipped():
+    assert "Please wait" in send_message(
+        "Refund my order ORD001"
+    )
+
+
+def test_refund_processing():
+    assert "cancellation" in send_message(
+        "Can I cancel my order ORD002?"
+    )
+
+
+def test_refund_delivered():
+    assert "may be eligible for a refund" in send_message(
+        "Refund my order ORD003"
+    )
+
+
+def test_refund_not_found():
+    assert "was not found" in send_message(
+        "Refund my order ORD999"
+    )
+
+def test_product_price():
+    assert "RM3500" in send_message(
+        "How much is the laptop?"
+    )
+
+
+def test_product_in_stock():
+    assert "Availability: In Stock" in send_message(
+        "Is the keyboard available?"
+    )
+
+
+def test_product_out_of_stock():
+    assert "Availability: Out of Stock" in send_message(
+        "Do you have a mouse?"
+    )
+
+
+def test_product_details():
+    assert "RTX 5050" in send_message(
+        "Tell me about the laptop"
+    )
+
+
+def test_product_recommendation():
+    assert "Mechanical Keyboard" in send_message(
+        "Recommend a product"
+    )
+
+
+def test_product_list():
+    assert "Laptop, Keyboard, Mouse" in send_message(
+        "What products do you sell?"
+    )
