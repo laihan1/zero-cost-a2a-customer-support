@@ -22,6 +22,10 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - One additional Agent Registry test.
 - Three additional Supervisor intent detection tests.
 - Support Agent isolation integration test.
+- Shared AgentResponse schema.
+- Shared A2A response message builder.
+- Native A2A structured Data Part support.
+- Structured response unit and integration tests.
 
 ### Changed
 
@@ -34,6 +38,11 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Refactored Support Agent to handle FAQ questions only.
 - Updated existing integration tests to use Supervisor Agent as the main entry point.
 - Consolidated intent detection keywords.
+- Refactored all specialist agents to return structured responses.
+- Extended the shared A2A client to retrieve structured data.
+- Replaced refund order status text parsing with structured data access.
+- Updated Supervisor Agent to forward complete structured responses.
+- Preserved backward compatibility with existing text responses.
 
 ### Removed
 
@@ -50,24 +59,16 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Additional Supervisor Registry test: 1/1 passed.
 - Total: 58/58 automated tests passed.
 - All five agents successfully started.
-- Total: 62/62 automated tests passed.
+- Added 9 structured response unit tests.
+- Added 6 structured integration tests.
+- Total: 77/77 automated tests passed.
 
 ### Planned
 
-- Improved intent routing
-- Structured agent responses
-- Enhanced error handling and logging
-- Local LLM integration
-
-### Planned
-
-- Supervisor Agent
-- Centralized Agent Registry
-- Shared A2A communication layer
-- Improved intent routing
-- Structured agent responses
-- Enhanced error handling and logging
-- Local LLM integration
+- Improved error handling and response validation.
+- Centralized logging.
+- Additional offline and regression tests.
+- Phase 4 milestone release.
 
 ## [0.3.0] — Multi-Agent Collaboration
 
@@ -125,7 +126,7 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Basic service availability error handling.
 - Six integration tests.
 
-### TestingUnreleased
+### Testing
 
 - Total: 10 automated tests passed.
 

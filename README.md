@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.3.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-62%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-77%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -105,6 +105,15 @@ Common communication components are centralized in the shared package.
 | a2a_client.py | Reusable A2A communication client |
 
 The Support Agent and Refund Agent reuse these shared components to reduce duplicated code and improve maintainability.
+
+### Structured Agent Responses
+
+- Standardized response schema shared by all agents.
+- Native A2A Text Part and Data Part support.
+- Consistent agent, success, message, data and error_code fields.
+- Structured order status communication between Refund and Order Agents.
+- Supervisor forwards structured responses while preserving the original agent identity.
+- Backward compatibility with existing text responses.
 
 ### Multi-Agent Collaboration
 
@@ -292,7 +301,9 @@ python -m pytest tests/ -v
 | Agent Discovery | 3 | 3 |
 | Supervisor Logic | 11 | 11 |
 | Supervisor Integration | 5 | 5 |
-| Total | 62 | 62 |
+| Structured Response Unit Tests | 9 | 9 |
+| Structured Integration Tests | 6 | 6 |
+| Total | 77 | 77 |
 
 Test pass rate: 100% for the current test suite.
 

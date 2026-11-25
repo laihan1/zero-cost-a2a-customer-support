@@ -1,3 +1,5 @@
+from shared.response_schema import AgentResponse
+
 PRODUCTS = {
     "laptop": {
         "name": "Gaming Laptop",
@@ -20,7 +22,7 @@ PRODUCTS = {
 }
 
 
-def get_product_response(user_message: str) -> str:
+def get_product_result(user_message: str) -> AgentResponse:
 
     message = user_message.lower()
 
@@ -28,17 +30,26 @@ def get_product_response(user_message: str) -> str:
 
         if key in message:
 
-            if product["stock"] > 0:
-                availability = "In Stock"
-            else:
-                availability = "Out of Stock"
+            availability = (
+                "In Stock" if product["stock"] > 0
+                else "Out of Stock"
+            )
 
-            return (
-                f"Product: {product['name']}\n"
-                f"Price: RM{product['price']}\n"
-                f"Stock: {product['stock']}\n"
-                f"Availability: {availability}\n"
-                f"Description: {product['description']}"
+            return AgentResponse(
+                agent="product",
+                success=True,
+                message=(
+                    f"Product: {product['name']}\n"
+                    f"Price: RM{product['price']}\n"
+                    f"Stock: {product['stock']}\n"
+                    f"Availability: {availability}\n"
+                    f"Description: {product['description']}"
+                ),
+                data={
+                    **product,
+                    "currency": "MYR",
+                    "availability": availability
+                }
             )
 
     if "recommend" in message:
@@ -49,19 +60,41 @@ def get_product_response(user_message: str) -> str:
         ]
 
         if not available_products:
-            return "No products are currently available."
+            return AgentResponse(
+                agent="product",
+                success=False,
+                message="No products are currently available.",
+                error_code="NO_AVAILABLE_PRODUCTS"
+            )
 
         product = min(
             available_products,
             key=lambda item: item["price"]
         )
 
-        return (
-            f"We recommend the {product['name']}.\n"
-            f"Price: RM{product['price']}"
+        return AgentResponse(
+            agent="product",
+            success=True,
+            message=(
+                f"We recommend the {product['name']}.\n"
+                f"Price: RM{product['price']}"
+            ),
+            data={
+                "recommendation": product,
+                "currency": "MYR"
+            }
         )
 
-    return (
-        "Available products: Laptop, Keyboard, Mouse. "
-        "Which product are you interested in?"
+    return AgentResponse(
+        agent="product",
+        success=True,
+        message=(
+            "Available products: Laptop, Keyboard, Mouse. "
+            "Which product are you interested in?"
+        ),
+        data={"products": list(PRODUCTS.keys())}
     )
+
+
+def get_product_response(user_message: str) -> str:
+    return get_product_result(user_message).message

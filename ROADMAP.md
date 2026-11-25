@@ -11,7 +11,7 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 - Development stage: Phase 4 in progress (Phase 4.1, 4.2 and 4.3 completed)
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 62/62 passed
+- Automated tests: 77/77 passed
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -96,8 +96,16 @@ Target version: v0.4.0
 
 ### Phase 4.4 — Structured Agent Responses
 
-- [ ] Improve structured agent responses
-- [ ] Standardize response format
+- [x] Improve structured agent responses
+- [x] Standardize response format
+- [x] Implement shared AgentResponse schema
+- [x] Support native A2A Text and Data Parts
+- [x] Refactor all specialist agents
+- [x] Replace refund text parsing with structured data
+- [x] Implement Supervisor structured response forwarding
+- [x] Maintain backward compatibility
+- [x] Add 15 structured response tests
+- [x] Pass all 77 regression tests
 
 ### Phase 4.5 — Error Handling and Logging
 

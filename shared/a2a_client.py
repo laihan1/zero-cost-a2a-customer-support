@@ -6,11 +6,11 @@ from shared.agent_registry import get_agent_url
 from shared.config import REQUEST_TIMEOUT
 
 
-async def call_agent(
+async def call_agent_parts(
     card_url: str,
     user_message: str,
     timeout: float = REQUEST_TIMEOUT
-) -> str:
+) -> list[dict]:
 
     url = await discover_agent(card_url)
 
@@ -45,7 +45,22 @@ async def call_agent(
         if "error" in result:
             raise RuntimeError(str(result["error"]))
 
-        return result["result"]["message"]["parts"][0]["text"]
+        return result["result"]["message"]["parts"]
+
+
+async def call_agent(
+    card_url: str,
+    user_message: str,
+    timeout: float = REQUEST_TIMEOUT
+) -> str:
+
+    parts = await call_agent_parts(
+        card_url,
+        user_message,
+        timeout
+    )
+
+    return parts[0]["text"]
 
 
 async def call_agent_by_name(
@@ -64,3 +79,27 @@ async def call_agent_by_name(
         user_message,
         timeout
     )
+
+
+async def call_agent_data_by_name(
+    agent_name: str,
+    user_message: str,
+    timeout: float = REQUEST_TIMEOUT
+) -> dict:
+
+    card_url = (
+        get_agent_url(agent_name)
+        + "/.well-known/agent-card.json"
+    )
+
+    parts = await call_agent_parts(
+        card_url,
+        user_message,
+        timeout
+    )
+
+    for part in parts:
+        if "data" in part:
+            return part["data"]
+
+    raise RuntimeError("Structured response not found.")

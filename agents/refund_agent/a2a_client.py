@@ -1,20 +1,19 @@
-from shared.a2a_client import call_agent_by_name
+from shared.a2a_client import call_agent_data_by_name
 from shared.config import REFUND_REQUEST_TIMEOUT
 
 
 async def get_order_status(order_id: str) -> str:
 
-    text = await call_agent_by_name(
+    result = await call_agent_data_by_name(
         "order",
         f"Check order {order_id}",
         timeout=REFUND_REQUEST_TIMEOUT
     )
 
-    if "was not found" in text:
+    if result.get("error_code") == "ORDER_NOT_FOUND":
         return "Not Found"
 
-    for line in text.splitlines():
-        if line.startswith("Status:"):
-            return line.split(":", 1)[1].strip()
+    if not result.get("success"):
+        return "Unknown"
 
-    return "Unknown"
+    return result.get("data", {}).get("status", "Unknown")
