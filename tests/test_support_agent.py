@@ -17,7 +17,7 @@ async def main():
                 "role": "ROLE_USER",
                 "parts": [
                     {
-                        "text": "What are your opening hours?"
+                        "text": "Where is my order ORD001?"
                     }
                 ]
             }
