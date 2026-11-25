@@ -4,13 +4,13 @@ from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.helpers import new_text_message
 
-from refund_logic import (
+from agents.refund_agent.refund_logic import (
     extract_order_id,
     get_refund_policy,
     check_refund_eligibility,
 )
 
-from a2a_client import get_order_status
+from agents.refund_agent.a2a_client import get_order_status
 
 
 class RefundAgentExecutor(AgentExecutor):

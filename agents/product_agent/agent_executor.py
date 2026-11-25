@@ -2,7 +2,7 @@ from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.helpers import new_text_message
 
-from product_logic import get_product_response
+from agents.product_agent.product_logic import get_product_response
 
 
 class ProductAgentExecutor(AgentExecutor):

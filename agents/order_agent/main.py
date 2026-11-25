@@ -16,7 +16,7 @@ from a2a.types import (
     AgentSkill,
 )
 
-from agent_executor import OrderAgentExecutor
+from agents.order_agent.agent_executor import OrderAgentExecutor
 
 
 def main():

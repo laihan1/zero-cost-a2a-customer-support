@@ -8,12 +8,12 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 
 ## Current Progress
 
-- Development stage: Phase 3 completed
+- Development stage: Phase 4 in progress (Phase 4.1 completed)
 - Implemented agents: 4
 - Planned agents: 5
-- Automated tests: 32/32 passed
+- Automated tests: 45/45 passed
 - Paid AI API cost: RM0
-- Current architecture: Rule-based multi-agent system
+- Current architecture: Rule-based multi-agent system with shared A2A components
 
 ## Phase 1 — A2A Foundation
 
@@ -61,19 +61,48 @@ Target version: v0.3.0
 
 Target version: v0.4.0
 
+### Phase 4.1 — Shared A2A Client and Agent Registry
+
+- [x] Implement centralized Agent Registry
+- [x] Implement shared A2A client
+- [x] Centralize agent configuration
+- [x] Implement shared Agent Card discovery
+- [x] Refactor Support and Refund A2A clients
+- [x] Standardize agent imports and startup commands
+- [x] Remove duplicated discovery code
+- [x] Add 13 automated tests
+- [x] Pass all 45 regression tests
+
+### Phase 4.2 — Supervisor Agent
+
 - [ ] Implement Supervisor Agent
+- [ ] Register Supervisor Agent
+- [ ] Implement centralized orchestration
+
+### Phase 4.3 — Support Agent Routing Refactoring
+
 - [ ] Separate routing from Support Agent
-- [ ] Implement centralized Agent Registry
-- [ ] Implement shared A2A client
-- [ ] Centralize agent configuration
+- [ ] Centralize intent routing
+- [ ] Preserve existing agent functionality
+
+### Phase 4.4 — Structured Agent Responses
+
 - [ ] Improve structured agent responses
+- [ ] Standardize response format
+
+### Phase 4.5 — Error Handling and Logging
+
 - [ ] Improve error handling
 - [ ] Implement logging
+
+### Phase 4.6 — Testing and Documentation
+
 - [ ] Add offline agent tests
 - [ ] Add routing tests
 - [ ] Run regression tests
 - [ ] Update documentation
 - [ ] Push to GitHub
+- [ ] Create milestone version tag
 
 ## Phase 5 — Local LLM Integration
 
@@ -141,7 +170,6 @@ Target version: v1.0.0
 - Intent routing currently relies on keyword matching.
 - Order and product data are stored in Python dictionaries.
 - Agent discovery uses predefined Agent Card URLs.
-- Some A2A communication logic is duplicated.
 - Refund eligibility is preliminary and does not verify delivery dates.
 - Refund transactions are not actually processed.
 - Agent services require manual startup.

@@ -16,7 +16,7 @@ from a2a.types import (
     AgentSkill,
 )
 
-from agent_executor import SupportAgentExecutor
+from agents.support_agent.agent_executor import SupportAgentExecutor
 
 
 def main():

@@ -4,9 +4,9 @@ from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.helpers import new_text_message
 
-from support_logic import get_support_response
+from agents.support_agent.support_logic import get_support_response
 
-from a2a_client import (
+from agents.support_agent.a2a_client import (
     call_order_agent,
     call_refund_agent,
     call_product_agent,

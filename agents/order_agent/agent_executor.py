@@ -2,7 +2,7 @@ from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.helpers import new_text_message
 
-from order_logic import get_order_response
+from agents.order_agent.order_logic import get_order_response
 
 
 class OrderAgentExecutor(AgentExecutor):

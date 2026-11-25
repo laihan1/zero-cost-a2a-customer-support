@@ -14,7 +14,7 @@ from a2a.types import (
     AgentSkill,
 )
 
-from agent_executor import ProductAgentExecutor
+from agents.product_agent.agent_executor import ProductAgentExecutor
 
 
 def main():

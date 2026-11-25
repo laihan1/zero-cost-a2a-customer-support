@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.3.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-32%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-45%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -18,18 +18,24 @@ The long-term goal is to integrate local LLMs, persistent data storage, intellig
 
 ## Current Development Status
 
-The project is currently in Phase 3: Multi-Agent Collaboration.
+The project is currently in Phase 4: Supervisor Agent and Architecture.
+
+Phase 4.1: Shared A2A Client and Agent Registry is completed.
 
 - Four operational agents
 - A2A JSON-RPC communication
-- Agent Card discovery
+- Centralized Agent Registry
+- Shared A2A Client
+- Shared Agent Card discovery
+- Centralized configuration
+- Unified agent startup commands
 - Rule-based intent routing
 - Multi-agent collaboration
 - Basic service failure handling
-- 32 automated tests passed
+- 45 automated tests passed
 - No paid AI API dependency
 
-Local LLM integration, database integration, and frontend development are planned for future phases.
+Supervisor Agent, local LLM integration, database integration, and frontend development are planned for upcoming phases.
 
 ## System Architecture
 
@@ -75,6 +81,19 @@ Agents communicate using the A2A Protocol with JSON-RPC transport.
 Agents retrieve connection information from Agent Cards instead of directly hardcoding the communication endpoint.
 
 The current implementation uses predefined Agent Card URLs.
+
+### Shared A2A Architecture
+
+Common communication components are centralized in the shared package.
+
+| Module | Responsibility |
+|---|---|
+| config.py | Centralized ports, URLs and timeout settings |
+| agent_registry.py | Centralized agent registration and URL lookup |
+| agent_discovery.py | Agent Card discovery |
+| a2a_client.py | Reusable A2A communication client |
+
+The Support Agent and Refund Agent reuse these shared components to reduce duplicated code and improve maintainability.
 
 ### Multi-Agent Collaboration
 
@@ -174,6 +193,10 @@ python agents/product_agent/main.py
 
 Keep all four agent services running.
 
+All agents are started as Python modules from the project root.
+
+No manual PYTHONPATH configuration is required.
+
 ## Agent Card Endpoints
 
 | Agent | Endpoint |
@@ -247,7 +270,10 @@ python -m pytest tests/ -v
 | Refund Integration | 5 | 5 |
 | Product Agent | 6 | 6 |
 | Product Integration | 6 | 6 |
-| Total | 32 | 32 |
+| Agent Registry | 5 | 5 |
+| Shared A2A Client | 5 | 5 |
+| Agent Discovery | 3 | 3 |
+| Total | 45 | 45 |
 
 Test pass rate: 100% for the current test suite.
 
@@ -274,7 +300,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 1 | A2A Foundation | Completed |
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
-| 4 | Supervisor Agent and Architecture | Planned |
+| 4 | Supervisor Agent and Architecture | In Progress |
 | 5 | Local LLM Integration | Planned |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |

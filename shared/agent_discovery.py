@@ -1,10 +1,9 @@
 import httpx
-
+from shared.config import DISCOVERY_TIMEOUT
 
 async def discover_agent(card_url: str) -> str:
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-
+    async with httpx.AsyncClient(timeout=DISCOVERY_TIMEOUT) as client:
         response = await client.get(card_url)
 
         response.raise_for_status()

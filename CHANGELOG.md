@@ -4,6 +4,46 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 ## [Unreleased]
 
+### Added
+
+- Centralized Agent Registry.
+- Shared A2A communication client.
+- Shared Agent Card discovery.
+- Centralized port, URL, and timeout configuration.
+- Five Agent Registry tests.
+- Five shared A2A Client tests.
+- Three Agent Discovery tests.
+
+### Changed
+
+- Refactored Support and Refund Agents to reuse shared A2A components.
+- Standardized Python package imports across all four agents.
+- Standardized agent startup using Python module execution.
+- Removed the requirement for manual PYTHONPATH configuration.
+- Updated README and development roadmap.
+
+### Removed
+
+- Duplicated A2A communication logic.
+- Legacy Support Agent discovery module.
+
+### Testing
+
+- Existing automated tests: 32/32 passed.
+- Agent Registry: 5/5 passed.
+- Shared A2A Client: 5/5 passed.
+- Agent Discovery: 3/3 passed.
+- Total: 45/45 automated tests passed.
+- All four agents successfully started using the new startup commands.
+
+### Planned
+
+- Supervisor Agent
+- Improved intent routing
+- Structured agent responses
+- Enhanced error handling and logging
+- Local LLM integration
+
 ### Planned
 
 - Supervisor Agent
@@ -70,7 +110,7 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Basic service availability error handling.
 - Six integration tests.
 
-### Testing
+### TestingUnreleased
 
 - Total: 10 automated tests passed.
 
