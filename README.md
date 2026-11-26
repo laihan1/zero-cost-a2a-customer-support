@@ -36,7 +36,7 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - 361 automated tests passed
 - No paid AI API dependency
 
-Phase 5.4.4 deterministic fallback and the classification deadline were completed, committed, and pushed as `f76b984`. Phase 5.4.5 verifies the Supervisor LLM pipeline with mocked HTTP transport.
+Phase 5.4.5 automated pipeline verification was completed, committed, and pushed as `0d494b2`. Phase 5.4.6 verified live routing, fallback during an actual Ollama outage, automatic recovery, and keyword-only operation offline.
 
 ### Phase 5.1 Local LLM Environment
 
@@ -397,7 +397,7 @@ python -m pytest tests/test_intent_classifier.py tests/test_llm_client.py tests/
 python -m pytest tests/test_supervisor_llm_pipeline.py -q -p no:cacheprovider
 ```
 
-These tests exercise the real Supervisor executor, validation, intent resolver, classifier, and LLM client. HTTPX `MockTransport` supplies Ollama responses and transport failures, and the specialist call is mocked. Coverage includes all four intents, fallback, late-result rejection, deadline isolation from specialist communication, in-flight cancellation, concurrent request isolation, native A2A response parts, and application log privacy. The HTTPX timeout case tests exception mapping. Live Supervisor inference and actual Ollama outage behavior remain pending.
+These tests exercise the real Supervisor executor, validation, intent resolver, classifier, and LLM client. HTTPX `MockTransport` supplies Ollama responses and transport failures, and the specialist call is mocked. Coverage includes all four intents, fallback, late-result rejection, deadline isolation from specialist communication, in-flight cancellation, concurrent request isolation, native A2A response parts, and application log privacy. The HTTPX timeout case tests exception mapping. Live Supervisor results are recorded below.
 
 ### Latest Verified Test Results
 
@@ -429,7 +429,7 @@ These tests exercise the real Supervisor executor, validation, intent resolver, 
 | Phase 5.4.5 Supervisor LLM pipeline | 27 | 27 |
 | Full Phase 5.4.5 regression | 361 | 361 |
 
-Phase 5.2 passed 63 LLM unit tests in 0.27 s and 189 full regression tests in 3.66 s. Phase 5.3 passed 134 targeted tests in 0.51 s and 249 full regression tests in 3.75 s, with zero failures, errors, or skips in the full run. All five agent services returned their expected Agent Cards over HTTP 200 with `LLM_ENABLED=false`. Ollama remained reachable. Operation with Ollama completely unavailable remains unverified.
+Phase 5.2 passed 63 LLM unit tests in 0.27 s and 189 full regression tests in 3.66 s. Phase 5.3 passed 134 targeted tests in 0.51 s and 249 full regression tests in 3.75 s, with zero failures, errors, or skips in the full run. All five agent services returned their expected Agent Cards over HTTP 200 with `LLM_ENABLED=false`. Ollama remained reachable during that run. Phase 5.4.6 later verified operation with the endpoint unavailable.
 
 Phase 5.4.2 passed 139 classifier, client, configuration, and keyword-router tests in 0.64 s, plus 60 validation and executor tests in 0.85 s. The full regression passed 302 tests in 4.31 s, with all five agents and `LLM_ENABLED=false`.
 
@@ -459,9 +459,42 @@ Phase 4 manual checks covered Order Agent shutdown, Supervisor and Refund fallba
 
 These results verify the implemented test scenarios and do not represent complete code coverage or production readiness.
 
+### Phase 5.4.6 Live Supervisor Verification
+
+The test used Windows 11 on an MSI Thin GF63 12VE with an Intel Core i5-12450H, 15.71 GiB RAM visible to Windows, an RTX 4050 Laptop GPU (6141 MiB), and Python 3.14.7. Ollama 0.40.18 served the installed `qwen3:4b` Q4_K_M model (2.50 GB) at `http://localhost:11434`. Ollama reported all 2,876,160,081 resident model bytes in VRAM, and NVIDIA reported 2844 MiB total GPU memory in use after loading.
+
+All five Agent Cards returned HTTP 200. The specialists used `LLM_ENABLED=false`. The enabled Supervisor used the settings above with `LLM_ENABLED=true` and inherited the default 15-second classification budget. Model residency was checked before the first request through Ollama's `/api/ps` endpoint. The test used the existing A2A client to send synthetic requests sequentially and inspect native Text and Data Parts. End-to-end timings include discovery and specialist communication.
+
+| Group | Requests | Routing | Min (s) | Max (s) | Mean (s) | Median (s) |
+|---|---:|---|---:|---:|---:|---:|
+| Model-unloaded cold | 1 | LLM | 9.4827 | 9.4827 | 9.4827 | 9.4827 |
+| Warm standard workflows | 12 | LLM | 0.5446 | 0.7673 | 0.5953 | 0.5643 |
+| Semantic comparison, enabled | 4 | LLM | 0.552 | 0.617 | 0.577 | 0.570 |
+| Semantic comparison, disabled | 4 | Keyword | 0.093 | 0.235 | 0.135 | 0.106 |
+| Structured business errors | 2 | LLM | 0.573 | 0.602 | 0.588 | 0.588 |
+| Ollama outage, inference enabled | 4 | Keyword fallback | 2.3630 | 2.5291 | 2.4111 | 2.3762 |
+| First recovered request, model unloaded | 1 | LLM | 5.5553 | 5.5553 | 5.5553 | 5.5553 |
+| Recovered semantic request, model resident | 1 | LLM | 0.6748 | 0.6748 | 0.6748 | 0.6748 |
+| Ollama offline, inference disabled | 4 | Keyword | 0.0796 | 0.1967 | 0.1261 | 0.1141 |
+
+The cold request returned `ORD001` as shipped and left the model resident. All 12 warm requests reached the expected agents and returned the expected fixtures. No request fell back in these groups. The dispatch enquiry routed to Order with the LLM and Support with keywords. The return enquiry routed to Refund with the LLM and Product with keywords. “When are you open?” correctly reached Support in both modes but returned a clarification prompt. The standard opening-hours wording returned Monday–Friday, 9 AM–6 PM. Both unknown-order requests returned `ORDER_NOT_FOUND` from their expected agents.
+
+The operator stopped and restarted the existing Ollama service. Before outage requests, HTTP connection checks failed and exclusive binds verified port 11434 was free on both loopback addresses. All four standard workflows returned their expected results and native A2A Text and Data Parts. Each enabled-mode request logged one `keyword_fallback` with reason `llm_unavailable`. The separate disabled-mode run logged `keyword` without LLM failure diagnostics.
+
+| Workflow | Business result in both offline modes | Enabled fallback (s) | Disabled keyword (s) |
+|---|---|---:|---:|
+| Order | ORD001 shipped | 2.3866 | 0.1967 |
+| Refund | ORD003 delivered and potentially eligible | 2.5291 | 0.1138 |
+| Product | Gaming Laptop, RM3500 | 2.3630 | 0.0796 |
+| Support | Monday–Friday, 9 AM–6 PM | 2.3657 | 0.1144 |
+
+The same enabled Supervisor (PID 28276) stayed running without restart or reconfiguration. After Ollama restarted, the first request selected Order with `routing_source=llm` in 5.5553 s and left the model resident. The dispatch enquiry then selected Order with `routing_source=llm` in 0.6748 s, while keyword routing selects Support. Both returned the shipped order without fallback.
+
+With Ollama reachable and inference disabled, the focused A2A suite passed 11 tests in 1.22 s, the pipeline suite passed 27 in 0.95 s, and the full suite passed 361 in 5.87 s. The separate offline full regression passed all 361 tests in 5.59 s, with Ollama unreachable at every check. Task-owned agents exited and released ports 9995–9999. The original Ollama endpoint and installed model were available after the final operator restart. Comprehensive benchmarking and server-side cancellation remain unverified.
+
 ## Current Limitations
 
-- Live enabled-mode routing, actual Ollama outages, server-side cancellation, and cold-start fallback remain unverified. Comprehensive accuracy and latency benchmarking is pending.
+- “When are you open?” reaches Support but returns a clarification prompt. Server-side cancellation and cold-start fallback remain unverified. Comprehensive accuracy and latency benchmarking is pending.
 - The cooperative Supervisor deadline applies only to classification. External cancellation relies on dependencies propagating it. An exploratory stub that swallowed external cancellation returned an intent and allowed the resolver to continue.
 - Order and product information uses mock data.
 - Agent Card discovery uses predefined URLs.
@@ -481,7 +514,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.4.5 automated pipeline tests and full regression passed. Live Supervisor verification pending. |
+| 5 | Local LLM Integration | Phase 5.4.6 live verification complete. Final regression and documentation checkpoint pending. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

@@ -72,7 +72,18 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Added 27 pipeline cases using real Supervisor, classifier, and client code with HTTPX `MockTransport`. Verified four-intent routing, fallback after representative HTTP and generated-output failures, native A2A responses, and application log privacy.
 - Verified late-result rejection, deadline isolation from specialist calls, propagation of unexpected cleanup errors, cooperative HTTP cancellation, and concurrent request isolation. All seven timing-sensitive cases passed in three repeat runs.
 - Passed 27 pipeline tests in 1.14 s, 79 Supervisor and executor tests in 1.10 s, 152 shared validation and LLM tests in 0.67 s, 11 focused A2A integration tests in 1.77 s, and 361 full regression tests in 6.35 s. The A2A service runs used `LLM_ENABLED=false`.
-- No production changes. An exploratory classifier that swallowed external cancellation returned an intent and allowed the resolver to continue. Live Supervisor inference and actual Ollama outage verification remain pending.
+- No production changes. An exploratory classifier that swallowed external cancellation returned an intent and allowed the resolver to continue.
+- Committed and pushed as `0d494b2` (`test: add cross-layer LLM pipeline and concurrent request verification`).
+
+### Phase 5.4.6 — Live Supervisor and Ollama Verification
+
+- Verified live Supervisor routing with Ollama 0.40.18, `qwen3:4b`, and the default 15-second classification budget. The model-unloaded request used LLM routing and returned the shipped order in 9.483 s end to end.
+- All 12 warm standard-workflow requests used LLM routing and returned the expected business results. Two of four semantic comparisons selected a different specialist from keyword mode. Both unknown-order requests returned `ORDER_NOT_FOUND` with the existing native response parts.
+- Passed 11 focused integration tests in 1.22 s, 27 pipeline tests in 0.95 s, and 361 regression tests in 5.87 s with the live Agent services configured for disabled inference. Ollama remained reachable.
+- Verified all four standard workflows during an actual Ollama outage. Enabled mode logged one `keyword_fallback` with `llm_unavailable` per request. Disabled mode used keyword routing without LLM failure diagnostics. Both preserved native response parts and expected business results.
+- Verified automatic recovery on Supervisor PID 28276 without restart or reconfiguration. The first recovered request selected Order via LLM in 5.5553 s. The warm semantic dispatch request selected Order via LLM in 0.6748 s, where keywords select Support.
+- Passed all 361 tests in 5.59 s with Ollama unavailable at every check. Verified task-owned agent exit and port release, and confirmed Ollama and the installed model after the final manual restart.
+- “When are you open?” selected Support in both modes and returned a clarification prompt. Specialist business logic is unchanged.
 
 ## [0.4.0] — Supervisor Architecture
 

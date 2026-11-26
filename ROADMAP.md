@@ -9,7 +9,7 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.4.4 fallback and classification deadline committed and pushed as `f76b984`. Phase 5.4.5 automated pipeline verification is complete.
+- Phase 5.4.5 automated pipeline verification committed and pushed as `0d494b2`. Phase 5.4.6 live verification is complete.
 - Implemented agents: 5
 - Planned agents: 5
 - Automated tests: 361/361 passed (Phase 5.4.4 baseline: 334/334)
@@ -177,9 +177,9 @@ Approved architecture: Use LLM-first routing with deterministic keyword fallback
 - [x] 5.4.4 — Complete Git checkpoint (`f76b984`).
 - [x] 5.4.5 — Verify routing, fallback, deadline and cancellation behavior, concurrency, and A2A response contracts through mocked HTTP transport. Pass all 361 regression tests.
 
-Phases 5.4.6–5.4.7 remain pending.
+- [x] 5.4.5 — Complete Git checkpoint (`0d494b2`).
 
-- [ ] 5.4.6 — Verify live Supervisor routing and fallback with local Ollama, measure initial end-to-end latency, and verify existing workflows.
+- [x] 5.4.6 — Verify live cold and warm routing, semantic differences, native response compatibility, actual Ollama outage fallback, and automatic recovery on the same Supervisor. Pass all 361 tests with Ollama unavailable and inference disabled.
 - [ ] 5.4.7 — Run the full regression, document verified results and limitations, and prepare a manual Git checkpoint.
 
 ### Phase 5.5 — Accuracy and Performance Benchmarking
@@ -237,7 +237,7 @@ Target version: v1.0.0
 - Refund eligibility is preliminary and does not verify delivery dates.
 - Refund transactions are not actually processed.
 - Agent services require manual startup.
-- Live enabled-mode routing, offline fallback, cold starts, and server-side cancellation remain unverified.
+- Server-side cancellation, cold-start fallback, and comprehensive performance and accuracy benchmarking remain unverified.
 - No persistent conversation memory is available.
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.
