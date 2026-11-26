@@ -7,6 +7,7 @@ from a2a.server.events import EventQueue
 
 from agents.supervisor_agent.supervisor_logic import detect_intent
 from shared.a2a_client import call_agent_data_by_name
+from shared.customer_message import MAX_MESSAGE_LENGTH, validate_customer_message
 from shared.response_schema import AgentResponse
 from shared.response_message import create_response_message
 
@@ -23,6 +24,22 @@ class SupervisorAgentExecutor(AgentExecutor):
     ) -> None:
 
         user_message = context.get_user_input()
+        try:
+            validate_customer_message(user_message)
+        except (TypeError, ValueError):
+            response = AgentResponse(
+                agent="supervisor",
+                success=False,
+                message=(
+                    "Please provide a valid customer message "
+                    f"of up to {MAX_MESSAGE_LENGTH} characters."
+                ),
+                data={},
+                error_code="INVALID_INPUT",
+            )
+            await event_queue.enqueue_event(create_response_message(response))
+            return
+
         agent_name = detect_intent(user_message)
 
         logger.info(

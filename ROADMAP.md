@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.3 standalone intent classifier implemented and verified. Manual Git checkpoint pending.
+- Phase 5.3 standalone intent classifier committed and pushed as `73aede3`. Phase 5.4.2 input validation implemented and verified locally.
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 249/249 passed (Phase 5.2 baseline: 189/189)
+- Automated tests: 302/302 passed (Phase 5.3 baseline: 249/249)
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -159,14 +159,16 @@ The initial cold start (134.14 s) and refund smoke-case latency (4.59 s) remain 
 - [x] 5.3.5 — Source review, 134 targeted tests, and seven live smoke tests at 64 tokens
 - [x] 5.3.6 — Full regression with LLM disabled and 249 tests passed
 - [x] 5.3.7 — Update documentation
-- [ ] 5.3.7 — Complete manual Git worktree verification, commit, and push
+- [x] 5.3.7 — Complete manual Git worktree verification, commit, and push (`73aede3`)
 
 ### Phase 5.4 — Supervisor LLM Integration and Deterministic Fallback
 
-All subphases are proposed and pending user approval.
+Approved architecture: Use LLM-first routing with deterministic keyword fallback for explicitly expected LLM failures. Reject invalid input before routing. Add a strict Supervisor-level classification deadline in a later subphase and preserve the existing A2A and AgentResponse contracts with minimal changes.
 
-- [ ] 5.4.1 — Review routing and error boundaries. Define when to invoke the classifier, how it relates to keyword routing, and which inputs and failures should trigger fallback.
-- [ ] 5.4.2 — Harden input validation. Address isolated Unicode surrogates, evaluate oversized messages, preserve sanitized errors, and test how invalid input affects routing.
+- [x] 5.4.1 — Complete and approve the architecture review.
+- [x] 5.4.2 — Share input validation across the classifier and Supervisor. Reject invalid Unicode and oversized input before routing. Verify the structured error and pass all 302 regression tests.
+
+Phases 5.4.3–5.4.7 remain pending.
 - [ ] 5.4.3 — Integrate the standalone classifier into the Supervisor while preserving the registry, A2A communication, and deterministic LLM-disabled behavior. Avoid unnecessary inference.
 - [ ] 5.4.4 — Implement the approved keyword fallback policy for disabled inference, unavailable Ollama, timeouts, HTTP failures, and invalid output. Preserve cancellation and unexpected error propagation.
 - [ ] 5.4.5 — Test successful classification, disabled mode, fallback, timeouts, unavailability, malformed and incomplete output, specialist routing, and structured response contracts.

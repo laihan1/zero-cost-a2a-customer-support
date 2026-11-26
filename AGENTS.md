@@ -102,13 +102,15 @@ Architecture requirements:
 - Validate all AI-generated structured outputs.
 - Avoid replacing A2A communication with direct Python function calls between independent agent services.
 
+Approved Phase 5.4 design: use LLM-first routing with deterministic keyword fallback for explicitly expected LLM failures. Reject invalid customer input before routing. Add a strict Supervisor-level classification deadline in a later subphase. Preserve the existing A2A and AgentResponse contracts with minimal changes.
+
 ## 6. Current Implementation Baseline
 
 Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
-Current branch: `feature/phase-5-local-llm` at confirmed HEAD `98e1468` (`feat: implement shared local Ollama client with configuration and tests`). Phase 5.2 is committed and pushed.
+Current branch: `feature/phase-5-local-llm` at confirmed HEAD `73aede3` (`feat: add structured local LLM intent classification`). Phases 5.2 and 5.3 are committed and pushed.
 
-Phase 5.3 implementation and verification are complete. Phase 5.3.7 documentation is updated. Manual Git worktree checks, commit, and push remain pending. Phase 5.4 Supervisor LLM integration and deterministic fallback are proposed and require user approval before implementation.
+Phase 5.4.1 architecture review is complete and approved. Phase 5.4.2 shared input validation is implemented, verified, and uncommitted. Phase 5.4.3 Supervisor LLM integration is pending user approval.
 
 Implemented agents:
 
@@ -143,6 +145,8 @@ Verified test baselines:
 - Phase 5.2 live client smoke test: 2/2 passed with `qwen3:4b` and matching `order` intents. First request: 5.86 s, with cold-start state unconfirmed. Warm request: 0.55 s. The test used a temporary 180-second HTTPX timeout.
 
 - Phase 5.3: 134 targeted tests passed in 0.51 s (74 existing and 60 new). All 249 regression tests passed in 3.75 s with `LLM_ENABLED=false`. Seven live classifier cases passed at 64 tokens with `qwen3:4b` already loaded and a temporary 180-second HTTPX timeout.
+
+- Phase 5.4.2: 139 targeted tests passed in 0.64 s, 60 validation and executor tests passed in 0.85 s, and all 302 regression tests passed in 4.31 s with `LLM_ENABLED=false`.
 
 Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
@@ -232,6 +236,11 @@ Current shared client:
 - `shared.llm_client.chat(messages, *, response_format=None, require_complete=False)` sends non-streaming Ollama chat requests through HTTPX, forwards an optional JSON Schema, and returns validated, non-empty message text.
 - The client accepts loopback HTTP origins and disables environment proxies and redirects. It preserves native HTTP status errors and uses the independent LLM exception hierarchy for client failures.
 - Application logs omit sensitive payloads. The client makes one request per call. Existing A2A communication and Supervisor routing remain independent of local inference.
+
+Shared input boundary:
+
+- `shared.customer_message.validate_customer_message(message)` requires a non-blank string of up to 400 Unicode code points with valid UTF-8 encoding. It preserves the original text and raises a sanitized `TypeError` or `ValueError` before any inference or routing. The character limit is not a guaranteed token budget.
+- Invalid input reaching the Supervisor executor returns native A2A Text and Data Parts with `agent="supervisor"`, `success=false`, `data={}`, `error_code="INVALID_INPUT"`, and the message “Please provide a valid customer message of up to 400 characters.” SDK-level rejections can occur before the executor.
 
 Standalone classifier:
 
@@ -436,14 +445,13 @@ At the Phase 4 baseline:
 
 Phase 5.3 source review found no critical, high, or medium-severity issues. Known limitations:
 
-- An isolated Unicode surrogate can pass validation and raise `UnicodeEncodeError` during request construction. The 400-character limit is conservative and gives no token-budget guarantee.
 - Seven live smoke cases leave general accuracy, broader prompt-injection resistance, cold-start performance, and reliability at the default 15-second timeout unverified. HTTPX operation timeouts provide no strict end-to-end deadline.
-- The Supervisor uses keyword routing. LLM integration and deterministic fallback remain proposed. The LLM-disabled regression ran with Ollama reachable, so behavior with Ollama completely unavailable remains unverified.
+- The Supervisor uses keyword routing. LLM integration and deterministic fallback are approved architecture decisions awaiting implementation. The Phase 5.3 LLM-disabled regression ran with Ollama reachable, so behavior with Ollama completely unavailable remains unverified.
 
 Phase 5.3 handoff:
 
 - All 57 project file hashes matched before and after full regression. Windows denied initial process-tree cleanup. All five ports were subsequently confirmed released, while complete process-tree termination remains unverified.
-- Direct Git worktree commands returned `fatal: this operation must be run in a work tree` in Codex. Verify status and whitespace manually before committing or pushing Phase 5.3.
+- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.2.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 

@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-249%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-302%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -33,10 +33,10 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - Native A2A Text and Data Parts
 - Centralized error handling and response validation
 - Configurable console logging
-- 249 automated tests passed
+- 302 automated tests passed
 - No paid AI API dependency
 
-Phase 5.3 standalone intent classification is implemented and verified. Its manual Git checkpoint is pending. The Supervisor continues to use keyword-based routing.
+Phase 5.3 standalone intent classification was completed, committed, and pushed as `73aede3`. Phase 5.4.2 adds shared customer message validation. The Supervisor continues to use keyword-based routing.
 
 ### Phase 5.1 Local LLM Environment
 
@@ -92,7 +92,7 @@ The client disables environment proxies and redirects and makes a single request
 
 ### Phase 5.3 Standalone Structured Intent Classifier
 
-`await classify_intent(user_message)` from `shared.intent_classifier` returns one of `order`, `refund`, `product`, or `support`. It rejects non-string, blank, and over-400-character inputs before inference without truncating messages. The classifier separates system instructions from customer text and forwards a JSON Schema that requires exactly one `intent` field. It independently rejects malformed JSON, duplicate keys, extra fields, and values outside the supported enum.
+`await classify_intent(user_message)` from `shared.intent_classifier` returns one of `order`, `refund`, `product`, or `support`. It uses the shared customer message validator before inference. The classifier separates system instructions from customer text and forwards a JSON Schema that requires exactly one `intent` field. It independently rejects malformed JSON, duplicate keys, extra fields, and values outside the supported enum.
 
 The classifier requires `done is True` and `done_reason == "stop"`. Incomplete or invalid responses raise `LLMResponseError`. Existing client exceptions propagate to the caller.
 
@@ -109,6 +109,12 @@ async def main():
 
 asyncio.run(main())
 ```
+
+### Customer Message Validation
+
+The standalone classifier and Supervisor accept non-blank strings of at most 400 Unicode code points. They reject isolated surrogate code points and preserve valid messages exactly, including whitespace and supplementary Unicode characters. The character limit is conservative and does not guarantee a model token budget.
+
+Invalid input reaching the Supervisor executor produces native A2A Text and Data Parts with `agent="supervisor"`, `success=false`, `data={}`, and `error_code="INVALID_INPUT"`. The message is “Please provide a valid customer message of up to 400 characters.” Validation runs before routing or specialist communication, regardless of the LLM setting. The A2A SDK can reject malformed requests before execution.
 
 ## System Architecture
 
@@ -402,10 +408,13 @@ python -m pytest tests/test_intent_classifier.py tests/test_llm_client.py tests/
 | Full Phase 5.2 regression | 189 | 189 |
 | Phase 5.3 targeted verification (74 existing and 60 new cases) | 134 | 134 |
 | Full Phase 5.3 regression | 249 | 249 |
+| Full Phase 5.4.2 regression | 302 | 302 |
 
 Phase 5.2 passed 63 LLM unit tests in 0.27 s and 189 full regression tests in 3.66 s. Phase 5.3 passed 134 targeted tests in 0.51 s and 249 full regression tests in 3.75 s, with zero failures, errors, or skips in the full run. All five agent services returned their expected Agent Cards over HTTP 200 with `LLM_ENABLED=false`. Ollama remained reachable. Operation with Ollama completely unavailable remains unverified.
 
-The live client smoke test passed 2/2 requests with `qwen3:4b`. Both returned the expected `order` intent. The first request took 5.86 s and had an unconfirmed cold-start state. The warm request took 0.55 s. The test used a temporary 180-second HTTPX timeout. These two observations provide smoke coverage only, with accuracy and performance benchmarking pending.
+Phase 5.4.2 passed 139 classifier, client, configuration, and keyword-router tests in 0.64 s, plus 60 validation and executor tests in 0.85 s. The full regression passed 302 tests in 4.31 s, with all five agents and `LLM_ENABLED=false`.
+
+The Phase 5.2 live client smoke test passed 2/2 requests with `qwen3:4b`. Both returned the expected `order` intent. The first request took 5.86 s and had an unconfirmed cold-start state. The warm request took 0.55 s. The test used a temporary 180-second HTTPX timeout. These two observations provide smoke coverage only, with accuracy and performance benchmarking pending.
 
 Phase 5.3 live smoke testing used Ollama 0.40.18 and an already-loaded `qwen3:4b` model. All seven cases passed with the default 64-token allowance and a temporary 180-second HTTPX timeout. No larger token allowance was needed.
 
@@ -429,7 +438,6 @@ These results verify the implemented test scenarios and do not represent complet
 
 - Intent routing relies on keyword matching.
 - Supervisor LLM integration and deterministic fallback are pending.
-- The conservative 400-character limit does not guarantee a token budget. An isolated Unicode surrogate can pass input validation and raise `UnicodeEncodeError` during HTTPX request construction.
 - The HTTPX timeout governs network operations. A strict end-to-end deadline remains outside the client.
 - Order and product information uses mock data.
 - Agent Card discovery uses predefined URLs.
@@ -449,7 +457,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.3 implementation and verification complete. Manual Git checkpoint pending. |
+| 5 | Local LLM Integration | Phase 5.3 committed and pushed. Phase 5.4.2 input validation verified. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

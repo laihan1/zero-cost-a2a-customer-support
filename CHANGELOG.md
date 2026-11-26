@@ -39,9 +39,16 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 #### Known Limitations
 
-- Isolated Unicode surrogate input can raise `UnicodeEncodeError` during request construction.
+- Phase 5.3 allowed isolated Unicode surrogates to reach request construction. Phase 5.4.2 resolves this.
 - Accuracy benchmarking, broader prompt-injection evaluation, cold-start verification, and default-timeout reliability are pending. Supervisor LLM integration and deterministic fallback are proposed for Phase 5.4.
-- Manual Git worktree verification, commit, and push remain pending.
+- Phase 5.3 was committed and pushed as `73aede3` (`feat: add structured local LLM intent classification`).
+
+### Phase 5.4.2 — Input Validation Hardening
+
+- Added a shared validator for non-blank strings of at most 400 Unicode code points. It rejects isolated surrogates before inference or routing and preserves valid text exactly.
+- The Supervisor rejects invalid input at its executor boundary with sanitized `INVALID_INPUT` Text and Data Parts. Valid requests still use the existing keyword router.
+- Passed 139 targeted tests in 0.64 s, 60 validation and executor tests in 0.85 s, and all 302 full regression tests in 4.31 s with `LLM_ENABLED=false`.
+- The character limit does not guarantee a model token budget. SDK-level request errors may occur before the application boundary. Supervisor LLM routing, deterministic fallback, and the classification deadline remain pending.
 
 ## [0.4.0] — Supervisor Architecture
 

@@ -79,6 +79,9 @@ def test_injection_text_does_not_change_system_message(llm_chat):
     ("", ValueError),
     (" \t\n", ValueError),
     ("x" * (MAX_MESSAGE_LENGTH + 1), ValueError),
+    ("\u3000", ValueError),
+    ("private\ud800text", ValueError),
+    ("\udfff", ValueError),
 ])
 def test_invalid_input_skips_llm(llm_chat, message, error):
     with pytest.raises(error):
@@ -87,7 +90,7 @@ def test_invalid_input_skips_llm(llm_chat, message, error):
 
 
 def test_accepts_input_at_length_limit(llm_chat):
-    message = "x" * MAX_MESSAGE_LENGTH
+    message = "😀" * MAX_MESSAGE_LENGTH
     llm_chat.return_value = '{"intent": "support"}'
 
     assert asyncio.run(classify_intent(message)) == "support"
@@ -148,6 +151,26 @@ def test_propagates_client_failures(llm_chat, error):
         asyncio.run(classify_intent("Customer enquiry"))
     assert exc.value is error
     llm_chat.assert_awaited_once()
+
+
+def test_valid_mixed_unicode_reaches_chat_unchanged(llm_chat):
+    message = "  你好、こんにちは! Café 😀  "
+    llm_chat.return_value = '{"intent": "support"}'
+
+    assert asyncio.run(classify_intent(message)) == "support"
+    assert llm_chat.await_args.args[0][1] == {"role": "user", "content": message}
+
+
+def test_surrogate_input_error_omits_sensitive_context(llm_chat, caplog):
+    message = "private customer text\ud800"
+
+    with pytest.raises(ValueError, match="valid Unicode") as exc:
+        asyncio.run(classify_intent(message))
+
+    assert exc.value.__context__ is None
+    assert "private customer text" not in str(exc.value)
+    assert "private customer text" not in caplog.text
+    llm_chat.assert_not_called()
 
 
 def test_validation_does_not_expose_sensitive_text(llm_chat, caplog):

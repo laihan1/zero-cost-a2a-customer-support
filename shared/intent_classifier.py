@@ -1,12 +1,11 @@
 import json
 
+from shared.customer_message import MAX_MESSAGE_LENGTH as MAX_MESSAGE_LENGTH
+from shared.customer_message import validate_customer_message
 from shared.exceptions import LLMResponseError
 from shared.llm_client import chat
 
 
-# Bound the input to short support enquiries and leave room in the 2048-token
-# context for the system prompt, schema, and response, including Unicode input.
-MAX_MESSAGE_LENGTH = 400
 _SUPPORTED_INTENTS = ("order", "refund", "product", "support")
 INTENT_SCHEMA = {
     "type": "object",
@@ -37,12 +36,7 @@ def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]
 
 async def classify_intent(user_message: str) -> str:
     """Classify one customer message using standalone local inference."""
-    if not isinstance(user_message, str):
-        raise TypeError("Customer message must be a string.")
-    if len(user_message) > MAX_MESSAGE_LENGTH:
-        raise ValueError(f"Customer message exceeds {MAX_MESSAGE_LENGTH} characters.")
-    if not user_message.strip():
-        raise ValueError("Customer message must not be blank.")
+    validate_customer_message(user_message)
 
     content = await chat(
         [
