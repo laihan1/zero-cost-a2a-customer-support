@@ -36,7 +36,22 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - 126 automated tests passed
 - No paid AI API dependency
 
-Local LLM integration, database integration, and frontend development are planned for upcoming phases.
+Phase 5.1 local LLM environment setup and standalone smoke testing are complete. Supervisor integration, database integration, and frontend development are planned for upcoming phases.
+
+### Phase 5.1 Local LLM Environment
+
+Ollama 0.40.18 served `qwen3:4b` (2.5 GB download) at `http://localhost:11434/api/chat`. The test machine used Python 3.14.7, an Intel Core i5-12450H, 16 GB RAM, and an NVIDIA GeForce RTX 4050 Laptop GPU with 6 GB VRAM. GPU offloading was 100%, observed GPU memory usage was 2844 MiB, and warm generation ran at approximately 51 tokens/sec.
+
+JSON mode produced incorrect or unsupported intents. JSON Schema with enum constraints passed all four standalone smoke cases.
+
+| Intent | Result | Latency |
+|---|---|---:|
+| `order` | PASS | 0.61 s |
+| `refund` | PASS | 4.59 s |
+| `product` | PASS | 0.32 s |
+| `support` | PASS | 0.32 s |
+
+The four-case smoke test scored 4/4 with a mean latency of 1.46 s. Full benchmarking is pending, including follow-up on the initial cold start (134.14 s) and refund latency (4.59 s).
 
 ## System Architecture
 
@@ -347,7 +362,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Planned |
+| 5 | Local LLM Integration | Phase 5.1 complete. Supervisor integration pending. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

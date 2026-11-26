@@ -9,6 +9,7 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
+- Phase 5.1 environment setup and standalone smoke testing complete.
 - Implemented agents: 5
 - Planned agents: 5
 - Automated tests: 126/126 passed
@@ -130,8 +131,19 @@ Published version: v0.4.0
 
 Target version: v0.5.0
 
-- [ ] Integrate Ollama
-- [ ] Test Qwen 3 4B
+### Phase 5.1 — Local LLM Environment Setup
+
+- [x] Install Ollama 0.40.18 and verify the local chat API
+- [x] Download `qwen3:4b` and verify GPU offloading
+- [x] Run standalone intent smoke tests with JSON Schema enum constraints
+- [x] Document the smoke results and proposed configuration
+
+The initial cold start (134.14 s) and refund smoke-case latency (4.59 s) remain open for performance follow-up. See [README.md](README.md#phase-51-local-llm-environment) for the smoke-test results.
+
+### Remaining Phase 5 Work
+
+- [ ] Integrate Ollama into the Supervisor
+- [ ] Benchmark Qwen 3 4B beyond the smoke tests
 - [ ] Test Qwen 3 8B
 - [ ] Implement LLM client
 - [ ] Implement intelligent intent classification

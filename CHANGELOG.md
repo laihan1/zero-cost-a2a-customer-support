@@ -4,6 +4,13 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 ## [Unreleased]
 
+### Phase 5.1 — Local LLM Environment Setup
+
+- Completed standalone setup with Ollama 0.40.18 and `qwen3:4b` (2.5 GB download).
+- JSON mode produced incorrect or unsupported intents. JSON Schema with enum constraints passed 4/4 smoke cases, with a mean latency of 1.46 s across those cases.
+- Recorded 100% GPU offloading, 2844 MiB observed GPU memory usage, and approximately 51 tokens/sec during warm generation.
+- Performance follow-up remains open for the initial cold start (134.14 s) and refund case (4.59 s). Full benchmarking and Supervisor integration are pending.
+
 ## [0.4.0] — Supervisor Architecture
 
 ### Added

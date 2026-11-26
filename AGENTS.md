@@ -217,9 +217,15 @@ If tests cannot be executed, clearly state that they remain unverified.
 
 ## 10. Local LLM Requirements
 
-Planned local LLM runtime: Ollama.
+Phase 5.1 local setup and standalone smoke testing are complete with Ollama 0.40.18 and `qwen3:4b` at `http://localhost:11434/api/chat`. Supervisor integration is pending.
 
-Planned models:
+Proposed configuration for later integration:
+
+- Set `think=false`, `temperature=0`, `num_ctx=2048`, `num_predict=64`, and `keep_alive=10m`.
+- Use JSON Schema with an intent enum of `order`, `refund`, `product`, and `support`.
+- Require backend validation and a rule-based fallback when integrating the model into Supervisor routing.
+
+Models for future benchmarking:
 
 - Qwen 3 4B
 - Qwen 3 8B
