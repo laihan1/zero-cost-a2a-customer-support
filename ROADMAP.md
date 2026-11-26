@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.4.3 Supervisor LLM routing committed and pushed as `0fb8484`. Phase 5.4.4 fallback and classification deadline implemented and verified locally.
+- Phase 5.4.4 fallback and classification deadline committed and pushed as `f76b984`. Phase 5.4.5 automated pipeline verification is complete.
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 334/334 passed (Phase 5.4.3 baseline: 321/321)
+- Automated tests: 361/361 passed (Phase 5.4.4 baseline: 334/334)
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -174,9 +174,11 @@ Approved architecture: Use LLM-first routing with deterministic keyword fallback
 - [x] 5.4.3 — Complete Git checkpoint (`0fb8484`).
 - [x] 5.4.4 — Apply keyword fallback for approved LLM failures and confirmed deadline expiration. Verify cancellation propagation and pass all 334 regression tests.
 
-Phases 5.4.5–5.4.7 remain pending.
+- [x] 5.4.4 — Complete Git checkpoint (`f76b984`).
+- [x] 5.4.5 — Verify routing, fallback, deadline and cancellation behavior, concurrency, and A2A response contracts through mocked HTTP transport. Pass all 361 regression tests.
 
-- [ ] 5.4.5 — Test successful classification, disabled mode, fallback, timeouts, unavailability, malformed and incomplete output, specialist routing, and structured response contracts.
+Phases 5.4.6–5.4.7 remain pending.
+
 - [ ] 5.4.6 — Verify live Supervisor routing and fallback with local Ollama, measure initial end-to-end latency, and verify existing workflows.
 - [ ] 5.4.7 — Run the full regression, document verified results and limitations, and prepare a manual Git checkpoint.
 

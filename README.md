@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-334%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-361%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -33,10 +33,10 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - Native A2A Text and Data Parts
 - Centralized error handling and response validation
 - Configurable console logging
-- 334 automated tests passed
+- 361 automated tests passed
 - No paid AI API dependency
 
-Phase 5.4.3 Supervisor LLM integration was completed, committed, and pushed as `0fb8484`. Phase 5.4.4 adds deterministic fallback and a classification deadline.
+Phase 5.4.4 deterministic fallback and the classification deadline were completed, committed, and pushed as `f76b984`. Phase 5.4.5 verifies the Supervisor LLM pipeline with mocked HTTP transport.
 
 ### Phase 5.1 Local LLM Environment
 
@@ -391,6 +391,14 @@ For the Phase 5.3 targeted checks, run the following command. For the full regre
 python -m pytest tests/test_intent_classifier.py tests/test_llm_client.py tests/test_llm_config.py tests/test_supervisor_logic.py -q -p no:cacheprovider
 ```
 
+### Supervisor LLM Pipeline Tests
+
+```powershell
+python -m pytest tests/test_supervisor_llm_pipeline.py -q -p no:cacheprovider
+```
+
+These tests exercise the real Supervisor executor, validation, intent resolver, classifier, and LLM client. HTTPX `MockTransport` supplies Ollama responses and transport failures, and the specialist call is mocked. Coverage includes all four intents, fallback, late-result rejection, deadline isolation from specialist communication, in-flight cancellation, concurrent request isolation, native A2A response parts, and application log privacy. The HTTPX timeout case tests exception mapping. Live Supervisor inference and actual Ollama outage behavior remain pending.
+
 ### Latest Verified Test Results
 
 | Test Category | Passed | Total |
@@ -418,6 +426,8 @@ python -m pytest tests/test_intent_classifier.py tests/test_llm_client.py tests/
 | Full Phase 5.4.2 regression | 302 | 302 |
 | Full Phase 5.4.3 regression | 321 | 321 |
 | Full Phase 5.4.4 regression | 334 | 334 |
+| Phase 5.4.5 Supervisor LLM pipeline | 27 | 27 |
+| Full Phase 5.4.5 regression | 361 | 361 |
 
 Phase 5.2 passed 63 LLM unit tests in 0.27 s and 189 full regression tests in 3.66 s. Phase 5.3 passed 134 targeted tests in 0.51 s and 249 full regression tests in 3.75 s, with zero failures, errors, or skips in the full run. All five agent services returned their expected Agent Cards over HTTP 200 with `LLM_ENABLED=false`. Ollama remained reachable. Operation with Ollama completely unavailable remains unverified.
 
@@ -426,6 +436,8 @@ Phase 5.4.2 passed 139 classifier, client, configuration, and keyword-router tes
 Phase 5.4.3 passed 66 Supervisor and executor tests in 0.89 s, 152 validation and shared LLM tests in 0.62 s, and 11 focused A2A integration tests in 1.48 s. The full regression passed 321 tests in 4.40 s with all five agents and `LLM_ENABLED=false`. Enabled-mode routing used mocked inference.
 
 Phase 5.4.4 passed 79 Supervisor and executor tests in 1.11 s, 152 shared validation and LLM tests in 0.69 s, 11 A2A integration tests in 1.48 s, and 334 full regression tests in 4.49 s. Deadline and cancellation tests used controlled async classifiers. All five agent services ran with `LLM_ENABLED=false` during the integration and full regression runs.
+
+Phase 5.4.5 passed 27 pipeline tests in 1.14 s, 79 existing Supervisor and executor tests in 1.10 s, 152 shared validation and LLM tests in 0.67 s, and 11 focused A2A integration tests in 1.77 s. The seven timing-sensitive cases passed in each of three repeat runs. The full regression passed 361 tests in 6.35 s with all five agents and `LLM_ENABLED=false`.
 
 The Phase 5.2 live client smoke test passed 2/2 requests with `qwen3:4b`. Both returned the expected `order` intent. The first request took 5.86 s and had an unconfirmed cold-start state. The warm request took 0.55 s. The test used a temporary 180-second HTTPX timeout. These two observations provide smoke coverage only, with accuracy and performance benchmarking pending.
 
@@ -450,7 +462,7 @@ These results verify the implemented test scenarios and do not represent complet
 ## Current Limitations
 
 - Live enabled-mode routing, actual Ollama outages, server-side cancellation, and cold-start fallback remain unverified. Comprehensive accuracy and latency benchmarking is pending.
-- The cooperative Supervisor deadline applies only to classification. The complete Supervisor request has no new end-to-end deadline.
+- The cooperative Supervisor deadline applies only to classification. External cancellation relies on dependencies propagating it. An exploratory stub that swallowed external cancellation returned an intent and allowed the resolver to continue.
 - Order and product information uses mock data.
 - Agent Card discovery uses predefined URLs.
 - Refund eligibility does not verify delivery dates.
@@ -469,7 +481,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.4.4 fallback and classification deadline regression-verified. Live Supervisor verification pending. |
+| 5 | Local LLM Integration | Phase 5.4.5 automated pipeline tests and full regression passed. Live Supervisor verification pending. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

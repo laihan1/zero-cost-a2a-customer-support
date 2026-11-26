@@ -65,6 +65,14 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Added stable routing-source and fallback-reason diagnostics without logging customer text or model output.
 - Passed 79 Supervisor and executor tests in 1.11 s, 152 shared validation and LLM tests in 0.69 s, 11 focused integration tests in 1.48 s, and all 334 regression tests in 4.49 s with `LLM_ENABLED=false` for the service runs.
 - The deadline is cooperative. Live enabled-mode routing, Ollama outages, cold-start fallback, server-side cancellation, and production latency remain unverified.
+- Committed and pushed as `f76b984` (`feat: add deterministic LLM fallback and supervisor classification deadline`).
+
+### Phase 5.4.5 — Comprehensive Automated Testing
+
+- Added 27 pipeline cases using real Supervisor, classifier, and client code with HTTPX `MockTransport`. Verified four-intent routing, fallback after representative HTTP and generated-output failures, native A2A responses, and application log privacy.
+- Verified late-result rejection, deadline isolation from specialist calls, propagation of unexpected cleanup errors, cooperative HTTP cancellation, and concurrent request isolation. All seven timing-sensitive cases passed in three repeat runs.
+- Passed 27 pipeline tests in 1.14 s, 79 Supervisor and executor tests in 1.10 s, 152 shared validation and LLM tests in 0.67 s, 11 focused A2A integration tests in 1.77 s, and 361 full regression tests in 6.35 s. The A2A service runs used `LLM_ENABLED=false`.
+- No production changes. An exploratory classifier that swallowed external cancellation returned an intent and allowed the resolver to continue. Live Supervisor inference and actual Ollama outage verification remain pending.
 
 ## [0.4.0] — Supervisor Architecture
 

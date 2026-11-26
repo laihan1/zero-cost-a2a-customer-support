@@ -108,9 +108,9 @@ Approved Phase 5.4 design: use LLM-first routing with deterministic keyword fall
 
 Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
-Current branch: `feature/phase-5-local-llm` at confirmed HEAD `0fb8484` (`feat: integrate local LLM intent classification into supervisor routing`). Phase 5.4.3 is committed and pushed.
+Current branch: `feature/phase-5-local-llm` at confirmed HEAD `f76b984` (`feat: add deterministic LLM fallback and supervisor classification deadline`). Phase 5.4.4 is committed and pushed.
 
-Phase 5.4.4 fallback and classification deadline are implemented, regression-verified, and uncommitted. Phase 5.4.5 comprehensive automated testing requires user approval.
+Phase 5.4.5 comprehensive automated testing is complete and uncommitted. Phase 5.4.6 live Supervisor and Ollama verification requires user approval.
 
 Implemented agents:
 
@@ -151,6 +151,8 @@ Verified test baselines:
 - Phase 5.4.3: 66 Supervisor/executor tests passed in 0.89 s, 152 shared validation/LLM tests in 0.62 s, 11 focused A2A integration tests in 1.48 s, and 321 regression tests in 4.40 s with `LLM_ENABLED=false`. Enabled-mode tests mocked inference.
 
 - Phase 5.4.4: 79 Supervisor and executor tests passed in 1.11 s, 152 shared validation and LLM tests in 0.69 s, 11 focused integration tests in 1.48 s, and 334 full regression tests in 4.49 s with `LLM_ENABLED=false` for the service runs.
+
+- Phase 5.4.5: 27 pipeline tests passed in 1.14 s, 79 Supervisor and executor tests in 1.10 s, 152 shared validation and LLM tests in 0.67 s, 11 focused integration tests in 1.77 s, and 361 full regression tests in 6.35 s. Each of three timing-sensitive repeats passed all seven selected tests.
 
 Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
@@ -223,6 +225,7 @@ Testing requirements:
 - Verify real offline behavior, fault isolation and recovery for major communication changes.
 - Test routing accuracy.
 - Test LLM output validation when implemented.
+- In Supervisor pipeline tests, keep validation, routing, classifier, LLM client, and response construction real. Inject HTTPX `MockTransport` at the LLM client boundary and mock specialist communication. Use real timeout contexts, synchronize in-flight cancellation and concurrent requests, and await all test-created tasks. Keep live Ollama verification separate.
 
 Do not modify tests simply to hide implementation failures.
 
@@ -459,12 +462,12 @@ At the Phase 4 baseline:
 Phase 5.3 source review found no critical, high, or medium-severity issues. Known limitations:
 
 - Seven live smoke cases leave general accuracy, broader prompt-injection resistance, cold-start performance, and reliability at the default 15-second timeout unverified. HTTPX operation timeouts provide no strict end-to-end deadline.
-- Enabled Supervisor routing, actual asynchronous deadline expiration, and external cancellation are covered with controlled classifiers. Live enabled-mode routing, Ollama outages, cold-start fallback, server-side cancellation, and production latency remain unverified. Scheduling, blocking work, and cancellation cleanup can delay the cooperative deadline.
+- Pipeline tests simulate Ollama HTTP behavior and verify real deadline expiration, cooperative cancellation, concurrent request isolation, and response compatibility. A dependency that suppresses external cancellation can let routing continue. Scheduling, blocking work, and cancellation cleanup can delay the cooperative deadline. Live enabled-mode routing, Ollama outages, cold-start fallback, server-side cancellation, and production latency remain unverified.
 
 Phase 5.3 handoff:
 
 - All 57 project file hashes matched before and after full regression. Windows denied initial process-tree cleanup. All five ports were subsequently confirmed released, while complete process-tree termination remains unverified.
-- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.4.
+- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.5.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 
