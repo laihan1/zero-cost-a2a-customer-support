@@ -108,9 +108,9 @@ Approved Phase 5.4 design: use LLM-first routing with deterministic keyword fall
 
 Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
-Current branch: `feature/phase-5-local-llm` at confirmed HEAD `73aede3` (`feat: add structured local LLM intent classification`). Phases 5.2 and 5.3 are committed and pushed.
+Current branch: `feature/phase-5-local-llm` at confirmed HEAD `6cfb51c` (`feat: harden customer message validation before supervisor routing`). Phase 5.4.2 is committed and pushed.
 
-Phase 5.4.1 architecture review is complete and approved. Phase 5.4.2 shared input validation is implemented, verified, and uncommitted. Phase 5.4.3 Supervisor LLM integration is pending user approval.
+Phase 5.4.3 Supervisor LLM routing is implemented, verified, and uncommitted. Phase 5.4.4 failure-triggered fallback and the Supervisor classification deadline require user approval.
 
 Implemented agents:
 
@@ -132,7 +132,7 @@ Current capabilities:
 - Preliminary refund eligibility.
 - Product information and recommendations.
 - Refund Agent to Order Agent collaboration.
-- Centralized Supervisor routing and orchestration using the keyword router and A2A. The standalone LLM classifier runs independently.
+- Centralized Supervisor routing using keyword or local LLM intent resolution and the existing A2A specialist path.
 - Shared A2A client, registry, discovery and configuration.
 - Native A2A Text and Data Parts using AgentResponse.
 - Centralized communication error handling and structured response validation.
@@ -147,6 +147,8 @@ Verified test baselines:
 - Phase 5.3: 134 targeted tests passed in 0.51 s (74 existing and 60 new). All 249 regression tests passed in 3.75 s with `LLM_ENABLED=false`. Seven live classifier cases passed at 64 tokens with `qwen3:4b` already loaded and a temporary 180-second HTTPX timeout.
 
 - Phase 5.4.2: 139 targeted tests passed in 0.64 s, 60 validation and executor tests passed in 0.85 s, and all 302 regression tests passed in 4.31 s with `LLM_ENABLED=false`.
+
+- Phase 5.4.3: 66 Supervisor/executor tests passed in 0.89 s, 152 shared validation/LLM tests in 0.62 s, 11 focused A2A integration tests in 1.48 s, and 321 regression tests in 4.40 s with `LLM_ENABLED=false`. Enabled-mode tests mocked inference.
 
 Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
@@ -228,26 +230,32 @@ If tests cannot be executed, clearly state that they remain unverified.
 
 ## 10. Local LLM Requirements
 
-Phase 5.1 local setup and standalone smoke testing are complete with Ollama 0.40.18 and `qwen3:4b` at `http://localhost:11434/api/chat`. Supervisor integration is pending.
+Phase 5.1 verified local setup with Ollama 0.40.18 and `qwen3:4b` at `http://localhost:11434/api/chat`.
 
 Current shared client:
 
 - `shared.config.load_llm_config(environ=None)` loads settings on demand and returns an immutable `LLMConfig`. The default is disabled with a 15-second HTTPX timeout.
 - `shared.llm_client.chat(messages, *, response_format=None, require_complete=False)` sends non-streaming Ollama chat requests through HTTPX, forwards an optional JSON Schema, and returns validated, non-empty message text.
 - The client accepts loopback HTTP origins and disables environment proxies and redirects. It preserves native HTTP status errors and uses the independent LLM exception hierarchy for client failures.
-- Application logs omit sensitive payloads. The client makes one request per call. Existing A2A communication and Supervisor routing remain independent of local inference.
+- Application logs omit sensitive payloads. The client makes one request per call. Existing A2A communication and specialist business logic remain independent of local inference.
 
 Shared input boundary:
 
 - `shared.customer_message.validate_customer_message(message)` requires a non-blank string of up to 400 Unicode code points with valid UTF-8 encoding. It preserves the original text and raises a sanitized `TypeError` or `ValueError` before any inference or routing. The character limit is not a guaranteed token budget.
 - Invalid input reaching the Supervisor executor returns native A2A Text and Data Parts with `agent="supervisor"`, `success=false`, `data={}`, `error_code="INVALID_INPUT"`, and the message “Please provide a valid customer message of up to 400 characters.” SDK-level rejections can occur before the executor.
 
+Supervisor intent resolution:
+
+- `agents.supervisor_agent.supervisor_logic.resolve_intent(user_message)` assumes the Supervisor has already validated the message. It loads and validates all LLM configuration on demand, including in disabled mode.
+- Disabled mode uses `detect_intent()` without an Ollama call or health check. Enabled mode awaits the existing classifier once and forwards the original customer message to the selected specialist.
+- Intent resolution runs outside the specialist communication exception handler. Invalid configuration, classification failures, and cancellation propagate to the calling framework. The `AGENT_UNAVAILABLE` contract still applies to specialist communication failures. Failure-triggered fallback and the Supervisor classification deadline are pending.
+
 Standalone classifier:
 
 - `shared.intent_classifier.classify_intent(user_message: str) -> str` validates input before inference, limits input to 400 characters, separates system and customer messages, and independently validates structured JSON. It rejects duplicate keys and returns only `order`, `refund`, `product`, or `support`.
 - The classifier enables strict completion validation, requiring `done is True` and `done_reason == "stop"`. Invalid output raises `LLMResponseError`. Existing client exceptions propagate.
 - Defaults are `LLM_ENABLED=false`, `LLM_BASE_URL=http://localhost:11434`, `LLM_MODEL=qwen3:4b`, `LLM_TIMEOUT=15.0`, `LLM_TEMPERATURE=0`, `LLM_NUM_CTX=2048`, `LLM_NUM_PREDICT=64`, `LLM_THINK=false`, and `LLM_KEEP_ALIVE=10m`.
-- Require backend validation and a rule-based fallback when integrating the model into Supervisor routing.
+- Preserve backend validation and implement the approved rule-based fallback in Phase 5.4.4.
 
 Models for future benchmarking:
 
@@ -446,12 +454,12 @@ At the Phase 4 baseline:
 Phase 5.3 source review found no critical, high, or medium-severity issues. Known limitations:
 
 - Seven live smoke cases leave general accuracy, broader prompt-injection resistance, cold-start performance, and reliability at the default 15-second timeout unverified. HTTPX operation timeouts provide no strict end-to-end deadline.
-- The Supervisor uses keyword routing. LLM integration and deterministic fallback are approved architecture decisions awaiting implementation. The Phase 5.3 LLM-disabled regression ran with Ollama reachable, so behavior with Ollama completely unavailable remains unverified.
+- Enabled Supervisor routing is covered with mocked inference. Live Supervisor routing, offline fallback, and deadline behavior remain unverified.
 
 Phase 5.3 handoff:
 
 - All 57 project file hashes matched before and after full regression. Windows denied initial process-tree cleanup. All five ports were subsequently confirmed released, while complete process-tree termination remains unverified.
-- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.2.
+- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.3.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 

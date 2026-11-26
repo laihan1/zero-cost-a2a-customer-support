@@ -5,7 +5,7 @@ import httpx
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 
-from agents.supervisor_agent.supervisor_logic import detect_intent
+from agents.supervisor_agent.supervisor_logic import resolve_intent
 from shared.a2a_client import call_agent_data_by_name
 from shared.customer_message import MAX_MESSAGE_LENGTH, validate_customer_message
 from shared.response_schema import AgentResponse
@@ -40,12 +40,7 @@ class SupervisorAgentExecutor(AgentExecutor):
             await event_queue.enqueue_event(create_response_message(response))
             return
 
-        agent_name = detect_intent(user_message)
-
-        logger.info(
-            "Routing request to %s agent",
-            agent_name
-        )
+        agent_name = await resolve_intent(user_message)
 
         try:
             result = await call_agent_data_by_name(

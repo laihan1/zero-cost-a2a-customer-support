@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.3 standalone intent classifier committed and pushed as `73aede3`. Phase 5.4.2 input validation implemented and verified locally.
+- Phase 5.4.2 input validation committed and pushed as `6cfb51c`. Phase 5.4.3 Supervisor LLM routing implemented and verified locally.
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 302/302 passed (Phase 5.3 baseline: 249/249)
+- Automated tests: 321/321 passed (Phase 5.4.2 baseline: 302/302)
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -168,9 +168,12 @@ Approved architecture: Use LLM-first routing with deterministic keyword fallback
 - [x] 5.4.1 — Complete and approve the architecture review.
 - [x] 5.4.2 — Share input validation across the classifier and Supervisor. Reject invalid Unicode and oversized input before routing. Verify the structured error and pass all 302 regression tests.
 
-Phases 5.4.3–5.4.7 remain pending.
-- [ ] 5.4.3 — Integrate the standalone classifier into the Supervisor while preserving the registry, A2A communication, and deterministic LLM-disabled behavior. Avoid unnecessary inference.
-- [ ] 5.4.4 — Implement the approved keyword fallback policy for disabled inference, unavailable Ollama, timeouts, HTTP failures, and invalid output. Preserve cancellation and unexpected error propagation.
+- [x] 5.4.2 — Complete Git checkpoint (`6cfb51c`).
+- [x] 5.4.3 — Integrate the classifier into the Supervisor, preserve deterministic LLM-disabled routing, and pass all 321 regression tests.
+
+Phases 5.4.4–5.4.7 remain pending.
+
+- [ ] 5.4.4 — Apply the approved keyword fallback to expected LLM failures and add a Supervisor classification deadline. Preserve cancellation and unexpected error propagation.
 - [ ] 5.4.5 — Test successful classification, disabled mode, fallback, timeouts, unavailability, malformed and incomplete output, specialist routing, and structured response contracts.
 - [ ] 5.4.6 — Verify live Supervisor routing and fallback with local Ollama, measure initial end-to-end latency, and verify existing workflows.
 - [ ] 5.4.7 — Run the full regression, document verified results and limitations, and prepare a manual Git checkpoint.
@@ -225,13 +228,12 @@ Target version: v1.0.0
 
 ## Current Limitations
 
-- Intent routing currently relies on keyword matching.
 - Order and product data are stored in Python dictionaries.
 - Agent discovery uses predefined Agent Card URLs.
 - Refund eligibility is preliminary and does not verify delivery dates.
 - Refund transactions are not actually processed.
 - Agent services require manual startup.
-- Supervisor routing uses keyword matching. Supervisor LLM integration and deterministic fallback are pending.
+- Enabled-mode classification failures propagate. Failure-triggered fallback and the Supervisor classification deadline are pending.
 - No persistent conversation memory is available.
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.

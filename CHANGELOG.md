@@ -48,7 +48,15 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Added a shared validator for non-blank strings of at most 400 Unicode code points. It rejects isolated surrogates before inference or routing and preserves valid text exactly.
 - The Supervisor rejects invalid input at its executor boundary with sanitized `INVALID_INPUT` Text and Data Parts. Valid requests still use the existing keyword router.
 - Passed 139 targeted tests in 0.64 s, 60 validation and executor tests in 0.85 s, and all 302 full regression tests in 4.31 s with `LLM_ENABLED=false`.
-- The character limit does not guarantee a model token budget. SDK-level request errors may occur before the application boundary. Supervisor LLM routing, deterministic fallback, and the classification deadline remain pending.
+- The character limit does not guarantee a model token budget. SDK-level request errors may occur before the application boundary.
+- Committed and pushed as `6cfb51c` (`feat: harden customer message validation before supervisor routing`).
+
+### Phase 5.4.3 — Supervisor LLM Integration
+
+- Added asynchronous Supervisor intent resolution using the existing LLM configuration. Enabled mode awaits the local classifier once. Disabled mode uses deterministic keyword routing without any Ollama request.
+- Preserved the input validation boundary, original specialist request text, and native A2A response parts. Configuration and classification errors propagate separately from specialist communication errors.
+- Passed 66 Supervisor and executor tests in 0.89 s, 152 shared validation and LLM tests in 0.62 s, 11 integration tests in 1.48 s, and all 321 regression tests in 4.40 s with `LLM_ENABLED=false`. Enabled-mode tests mocked inference.
+- Failure-triggered fallback and the Supervisor classification deadline remain pending. Live enabled-mode Supervisor routing has yet to be verified.
 
 ## [0.4.0] — Supervisor Architecture
 
