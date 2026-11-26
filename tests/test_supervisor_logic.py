@@ -5,6 +5,7 @@ import pytest
 
 from agents.supervisor_agent import supervisor_logic
 from agents.supervisor_agent.supervisor_logic import detect_intent
+from shared.exceptions import LLMTimeoutError
 
 
 def test_order_intent():
@@ -62,8 +63,11 @@ def test_resolve_intent_uses_keyword_by_default(monkeypatch, caplog, enabled):
     with (
         patch.object(supervisor_logic, "detect_intent", wraps=detect_intent) as router,
         patch.object(supervisor_logic, "classify_intent") as classifier,
+        patch.object(supervisor_logic.asyncio, "timeout") as deadline,
     ):
         assert asyncio.run(supervisor_logic.resolve_intent(message)) == "order"
+
+    deadline.assert_not_called()
 
     router.assert_called_once_with(message)
     classifier.assert_not_called()
@@ -108,9 +112,92 @@ def test_disabled_mode_still_rejects_invalid_configuration(monkeypatch):
     with (
         patch.object(supervisor_logic, "detect_intent") as router,
         patch.object(supervisor_logic, "classify_intent") as classifier,
+        patch.object(supervisor_logic.asyncio, "timeout") as deadline,
     ):
         with pytest.raises(ValueError, match="LLM_TIMEOUT"):
             asyncio.run(supervisor_logic.resolve_intent("Track my order"))
 
     router.assert_not_called()
     classifier.assert_not_called()
+    deadline.assert_not_called()
+
+
+def test_classifier_completes_within_real_deadline(monkeypatch):
+    monkeypatch.setenv("LLM_ENABLED", "true")
+    monkeypatch.setenv("LLM_TIMEOUT", "1")
+
+    async def classify(message):
+        await asyncio.sleep(0)
+        return "refund"
+
+    with (
+        patch.object(supervisor_logic, "classify_intent", side_effect=classify) as classifier,
+        patch.object(supervisor_logic, "detect_intent", wraps=detect_intent) as router,
+    ):
+        assert asyncio.run(supervisor_logic.resolve_intent("Track my order")) == "refund"
+
+    classifier.assert_awaited_once_with("Track my order")
+    router.assert_not_called()
+
+
+def test_real_deadline_cancels_classifier_before_keyword_fallback(monkeypatch, caplog):
+    monkeypatch.setenv("LLM_ENABLED", "true")
+    monkeypatch.setenv("LLM_TIMEOUT", "0.02")
+    caplog.set_level("INFO")
+    message = "  Track private order 😀  "
+    events = []
+
+    async def classify(text):
+        assert text == message
+        assert asyncio.current_task() is resolver_task
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            events.append("cancelled")
+            await asyncio.sleep(0)
+            events.append("cleaned")
+            raise
+
+    def keyword(text):
+        events.append("routed")
+        return detect_intent(text)
+
+    async def run():
+        nonlocal resolver_task
+        resolver_task = asyncio.create_task(supervisor_logic.resolve_intent(message))
+        assert await asyncio.wait_for(resolver_task, timeout=3) == "order"
+        assert asyncio.all_tasks() == {asyncio.current_task()}
+
+    resolver_task = None
+    with (
+        patch.object(supervisor_logic, "classify_intent", side_effect=classify) as classifier,
+        patch.object(supervisor_logic, "detect_intent", side_effect=keyword) as router,
+        patch.object(supervisor_logic.asyncio, "timeout", wraps=asyncio.timeout) as deadline,
+    ):
+        asyncio.run(run())
+
+    deadline.assert_called_once_with(0.02)
+    classifier.assert_awaited_once_with(message)
+    router.assert_called_once_with(message)
+    assert events == ["cancelled", "cleaned", "routed"]
+    assert "fallback_reason=classification_deadline" in caplog.text
+    assert "routing_source=keyword_fallback" in caplog.text
+    assert "llm_timeout" not in caplog.text
+    assert message.strip() not in caplog.text
+
+
+def test_keyword_fallback_error_propagates_without_retry(monkeypatch):
+    monkeypatch.setenv("LLM_ENABLED", "true")
+    error = RuntimeError("Keyword failure")
+    message = "Track my order"
+
+    with (
+        patch.object(supervisor_logic, "classify_intent", side_effect=LLMTimeoutError()) as classifier,
+        patch.object(supervisor_logic, "detect_intent", side_effect=error) as router,
+    ):
+        with pytest.raises(RuntimeError) as exc:
+            asyncio.run(supervisor_logic.resolve_intent(message))
+
+    assert exc.value is error
+    classifier.assert_awaited_once_with(message)
+    router.assert_called_once_with(message)

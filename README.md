@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-321%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-334%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -33,10 +33,10 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - Native A2A Text and Data Parts
 - Centralized error handling and response validation
 - Configurable console logging
-- 321 automated tests passed
+- 334 automated tests passed
 - No paid AI API dependency
 
-Phase 5.4.2 shared customer message validation was completed, committed, and pushed as `6cfb51c`. Phase 5.4.3 connects the existing local classifier to the Supervisor when inference is enabled.
+Phase 5.4.3 Supervisor LLM integration was completed, committed, and pushed as `0fb8484`. Phase 5.4.4 adds deterministic fallback and a classification deadline.
 
 ### Phase 5.1 Local LLM Environment
 
@@ -64,7 +64,7 @@ The four-case smoke test scored 4/4 with a mean latency of 1.46 s. Full benchmar
 | `LLM_ENABLED` | `false` | Enable local inference for the classifier and Supervisor |
 | `LLM_BASE_URL` | `http://localhost:11434` | Loopback HTTP origin |
 | `LLM_MODEL` | `qwen3:4b` | Local model name |
-| `LLM_TIMEOUT` | `15.0` | HTTPX timeout in seconds |
+| `LLM_TIMEOUT` | `15.0` | HTTPX operation timeout and Supervisor classification budget, in seconds |
 | `LLM_TEMPERATURE` | `0` | Sampling temperature |
 | `LLM_NUM_CTX` | `2048` | Context window in tokens |
 | `LLM_NUM_PREDICT` | `64` | Maximum generated tokens |
@@ -163,7 +163,9 @@ The Supervisor validates customer input and resolves an intent before calling on
 - With `LLM_ENABLED=false` or unset under valid configuration, the Supervisor uses keyword routing. This mode requires no Ollama connection or health check.
 - With `LLM_ENABLED=true`, the Supervisor awaits the local classifier once and uses its validated intent. The specialist receives the original message and remains responsible for the customer response.
 
-The loader validates all LLM settings in both modes. Invalid configuration and enabled-mode classification failures propagate to the surrounding SDK or application framework before any specialist call. `AGENT_UNAVAILABLE` continues to cover specialist communication failures. Failure-triggered keyword fallback and a Supervisor classification deadline are pending.
+The loader validates all LLM settings in both modes. During an enabled classification attempt, `LLMDisabledError`, `LLMUnavailableError`, `LLMTimeoutError`, `LLMResponseError`, `httpx.HTTPStatusError`, and confirmed Supervisor deadline expiration each trigger one keyword fallback. Invalid configuration, unrelated `TimeoutError`, unexpected errors, and external cancellation propagate before any specialist call. `AGENT_UNAVAILABLE` still applies to specialist communication failures.
+
+The two time limits run concurrently and use the same `LLM_TIMEOUT` value, which defaults to 15 seconds. HTTPX limits network operations. The Supervisor deadline covers the entire awaited classification, including response parsing and validation. Keyword fallback and specialist communication run after the timeout context exits. The deadline is cooperative. Scheduling, blocking work, and cancellation cleanup can affect elapsed time, and local cancellation does not guarantee that Ollama stops server-side inference immediately.
 
 ### Agent-to-Agent Communication
 
@@ -415,12 +417,15 @@ python -m pytest tests/test_intent_classifier.py tests/test_llm_client.py tests/
 | Full Phase 5.3 regression | 249 | 249 |
 | Full Phase 5.4.2 regression | 302 | 302 |
 | Full Phase 5.4.3 regression | 321 | 321 |
+| Full Phase 5.4.4 regression | 334 | 334 |
 
 Phase 5.2 passed 63 LLM unit tests in 0.27 s and 189 full regression tests in 3.66 s. Phase 5.3 passed 134 targeted tests in 0.51 s and 249 full regression tests in 3.75 s, with zero failures, errors, or skips in the full run. All five agent services returned their expected Agent Cards over HTTP 200 with `LLM_ENABLED=false`. Ollama remained reachable. Operation with Ollama completely unavailable remains unverified.
 
 Phase 5.4.2 passed 139 classifier, client, configuration, and keyword-router tests in 0.64 s, plus 60 validation and executor tests in 0.85 s. The full regression passed 302 tests in 4.31 s, with all five agents and `LLM_ENABLED=false`.
 
 Phase 5.4.3 passed 66 Supervisor and executor tests in 0.89 s, 152 validation and shared LLM tests in 0.62 s, and 11 focused A2A integration tests in 1.48 s. The full regression passed 321 tests in 4.40 s with all five agents and `LLM_ENABLED=false`. Enabled-mode routing used mocked inference.
+
+Phase 5.4.4 passed 79 Supervisor and executor tests in 1.11 s, 152 shared validation and LLM tests in 0.69 s, 11 A2A integration tests in 1.48 s, and 334 full regression tests in 4.49 s. Deadline and cancellation tests used controlled async classifiers. All five agent services ran with `LLM_ENABLED=false` during the integration and full regression runs.
 
 The Phase 5.2 live client smoke test passed 2/2 requests with `qwen3:4b`. Both returned the expected `order` intent. The first request took 5.86 s and had an unconfirmed cold-start state. The warm request took 0.55 s. The test used a temporary 180-second HTTPX timeout. These two observations provide smoke coverage only, with accuracy and performance benchmarking pending.
 
@@ -444,8 +449,8 @@ These results verify the implemented test scenarios and do not represent complet
 
 ## Current Limitations
 
-- Live Supervisor LLM routing, failure-triggered fallback, and the Supervisor classification deadline remain unverified or pending implementation.
-- The HTTPX timeout governs network operations. A strict end-to-end deadline remains outside the client.
+- Live enabled-mode routing, actual Ollama outages, server-side cancellation, and cold-start fallback remain unverified. Comprehensive accuracy and latency benchmarking is pending.
+- The cooperative Supervisor deadline applies only to classification. The complete Supervisor request has no new end-to-end deadline.
 - Order and product information uses mock data.
 - Agent Card discovery uses predefined URLs.
 - Refund eligibility does not verify delivery dates.
@@ -464,7 +469,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.4.3 LLM routing implemented and regression-verified. Fallback and deadline pending. |
+| 5 | Local LLM Integration | Phase 5.4.4 fallback and classification deadline regression-verified. Live Supervisor verification pending. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

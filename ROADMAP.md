@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.4.2 input validation committed and pushed as `6cfb51c`. Phase 5.4.3 Supervisor LLM routing implemented and verified locally.
+- Phase 5.4.3 Supervisor LLM routing committed and pushed as `0fb8484`. Phase 5.4.4 fallback and classification deadline implemented and verified locally.
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 321/321 passed (Phase 5.4.2 baseline: 302/302)
+- Automated tests: 334/334 passed (Phase 5.4.3 baseline: 321/321)
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -163,7 +163,7 @@ The initial cold start (134.14 s) and refund smoke-case latency (4.59 s) remain 
 
 ### Phase 5.4 — Supervisor LLM Integration and Deterministic Fallback
 
-Approved architecture: Use LLM-first routing with deterministic keyword fallback for explicitly expected LLM failures. Reject invalid input before routing. Add a strict Supervisor-level classification deadline in a later subphase and preserve the existing A2A and AgentResponse contracts with minimal changes.
+Approved architecture: Use LLM-first routing with deterministic keyword fallback for explicitly expected LLM failures. Reject invalid input before routing. Enforce a cooperative Supervisor-level classification deadline and preserve the existing A2A and AgentResponse contracts.
 
 - [x] 5.4.1 — Complete and approve the architecture review.
 - [x] 5.4.2 — Share input validation across the classifier and Supervisor. Reject invalid Unicode and oversized input before routing. Verify the structured error and pass all 302 regression tests.
@@ -171,9 +171,11 @@ Approved architecture: Use LLM-first routing with deterministic keyword fallback
 - [x] 5.4.2 — Complete Git checkpoint (`6cfb51c`).
 - [x] 5.4.3 — Integrate the classifier into the Supervisor, preserve deterministic LLM-disabled routing, and pass all 321 regression tests.
 
-Phases 5.4.4–5.4.7 remain pending.
+- [x] 5.4.3 — Complete Git checkpoint (`0fb8484`).
+- [x] 5.4.4 — Apply keyword fallback for approved LLM failures and confirmed deadline expiration. Verify cancellation propagation and pass all 334 regression tests.
 
-- [ ] 5.4.4 — Apply the approved keyword fallback to expected LLM failures and add a Supervisor classification deadline. Preserve cancellation and unexpected error propagation.
+Phases 5.4.5–5.4.7 remain pending.
+
 - [ ] 5.4.5 — Test successful classification, disabled mode, fallback, timeouts, unavailability, malformed and incomplete output, specialist routing, and structured response contracts.
 - [ ] 5.4.6 — Verify live Supervisor routing and fallback with local Ollama, measure initial end-to-end latency, and verify existing workflows.
 - [ ] 5.4.7 — Run the full regression, document verified results and limitations, and prepare a manual Git checkpoint.
@@ -233,7 +235,7 @@ Target version: v1.0.0
 - Refund eligibility is preliminary and does not verify delivery dates.
 - Refund transactions are not actually processed.
 - Agent services require manual startup.
-- Enabled-mode classification failures propagate. Failure-triggered fallback and the Supervisor classification deadline are pending.
+- Live enabled-mode routing, offline fallback, cold starts, and server-side cancellation remain unverified.
 - No persistent conversation memory is available.
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.

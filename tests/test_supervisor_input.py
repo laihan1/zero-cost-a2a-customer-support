@@ -7,8 +7,10 @@ from google.protobuf.json_format import MessageToDict
 
 from agents.supervisor_agent import agent_executor, supervisor_logic
 from shared.exceptions import (
+    AgentError,
     AgentUnavailableError,
     LLMDisabledError,
+    LLMError,
     LLMResponseError,
     LLMTimeoutError,
     LLMUnavailableError,
@@ -123,17 +125,27 @@ def test_validation_handler_does_not_swallow_unexpected_errors(boundary, monkeyp
     llm.assert_not_called()
 
 
-@pytest.mark.parametrize("enabled", ["false", "true"])
+@pytest.mark.parametrize("enabled", ["false", "true", "fallback"])
 def test_specialist_failure_keeps_existing_contract(boundary, monkeypatch, enabled):
-    monkeypatch.setenv("LLM_ENABLED", enabled)
-    context, queue, _, specialist, llm = boundary
+    monkeypatch.setenv("LLM_ENABLED", "false" if enabled == "false" else "true")
+    context, queue, router, specialist, llm = boundary
     message = "Track my order"
     context.get_user_input.return_value = message
     llm.return_value = "order"
+    if enabled == "fallback":
+        llm.side_effect = LLMTimeoutError("Local inference timed out")
     specialist.side_effect = AgentUnavailableError("Specialist offline")
 
     asyncio.run(agent_executor.SupervisorAgentExecutor().execute(context, queue))
 
+    if enabled == "false":
+        llm.assert_not_called()
+    else:
+        llm.assert_awaited_once_with(message)
+    if enabled == "true":
+        router.assert_not_called()
+    else:
+        router.assert_called_once_with(message)
     specialist.assert_awaited_once_with("order", message)
     queue.enqueue_event.assert_awaited_once()
     parts = MessageToDict(queue.enqueue_event.await_args.args[0])["parts"]
@@ -150,18 +162,58 @@ def test_specialist_failure_keeps_existing_contract(boundary, monkeypatch, enabl
     ]
 
 
+@pytest.mark.parametrize(("error", "reason"), [
+    (LLMDisabledError("sensitive disabled detail"), "llm_disabled"),
+    (LLMUnavailableError("sensitive connection detail"), "llm_unavailable"),
+    (LLMTimeoutError("sensitive timeout detail"), "llm_timeout"),
+    (LLMResponseError("sensitive model output"), "llm_response_error"),
+    *[
+        (httpx.HTTPStatusError(
+            "sensitive HTTP detail",
+            request=httpx.Request("POST", "http://localhost:11434/api/chat"),
+            response=httpx.Response(status),
+        ), "llm_http_error")
+        for status in (404, 503)
+    ],
+])
+def test_recoverable_classifier_failure_routes_once(boundary, monkeypatch, caplog, error, reason):
+    monkeypatch.setenv("LLM_ENABLED", "true")
+    caplog.set_level("INFO")
+    context, queue, router, specialist, llm = boundary
+    message = "  Cancel my private order 😀  "
+    context.get_user_input.return_value = message
+    llm.side_effect = error
+    data = {"agent": "refund", "success": True, "message": "Reply", "data": {}}
+    specialist.return_value = data
+
+    asyncio.run(agent_executor.SupervisorAgentExecutor().execute(context, queue))
+
+    llm.assert_called_once_with(message)
+    llm.assert_awaited_once_with(message)
+    router.assert_called_once_with(message)
+    specialist.assert_called_once_with("refund", message)
+    specialist.assert_awaited_once_with("refund", message)
+    queue.enqueue_event.assert_awaited_once()
+    assert MessageToDict(queue.enqueue_event.await_args.args[0])["parts"] == [
+        {"text": "Reply"},
+        {"data": {**data, "error_code": None}},
+    ]
+    assert f"fallback_reason={reason}" in caplog.text
+    assert "intent=refund routing_source=keyword_fallback" in caplog.text
+    assert "classification_deadline" not in caplog.text
+    assert message.strip() not in caplog.text
+    assert str(error) not in caplog.text
+
+
 @pytest.mark.parametrize("error", [
-    LLMDisabledError("sensitive disabled detail"),
-    LLMUnavailableError("sensitive connection detail"),
-    LLMTimeoutError("sensitive timeout detail"),
-    LLMResponseError("sensitive model output"),
-    httpx.HTTPStatusError(
-        "sensitive HTTP detail",
-        request=httpx.Request("POST", "http://localhost:11434/api/chat"),
-        response=httpx.Response(503),
-    ),
     ValueError("sensitive programming detail"),
+    TypeError("sensitive type detail"),
     RuntimeError("sensitive runtime detail"),
+    AttributeError("sensitive attribute detail"),
+    KeyError("sensitive key detail"),
+    LLMError("unrecognized LLM error"),
+    AgentError("unexpected agent error"),
+    TimeoutError("unrelated timeout"),
     asyncio.CancelledError("sensitive cancellation detail"),
 ])
 def test_classifier_failure_propagates_without_fallback(boundary, monkeypatch, caplog, error):
@@ -182,6 +234,55 @@ def test_classifier_failure_propagates_without_fallback(boundary, monkeypatch, c
     queue.enqueue_event.assert_not_called()
     assert message not in caplog.text
     assert str(error) not in caplog.text
+    assert "keyword_fallback" not in caplog.text
+    assert "fallback_reason=" not in caplog.text
+
+
+@pytest.mark.parametrize("during_deadline_cleanup", [False, True])
+def test_external_executor_cancellation_propagates(boundary, monkeypatch, during_deadline_cleanup):
+    monkeypatch.setenv("LLM_ENABLED", "true")
+    monkeypatch.setenv("LLM_TIMEOUT", "0.02" if during_deadline_cleanup else "10")
+    context, queue, router, specialist, llm = boundary
+    message = "Track my order"
+    context.get_user_input.return_value = message
+
+    async def run():
+        started = asyncio.Event()
+        cancelling = asyncio.Event()
+
+        async def classify(user_message):
+            started.set()
+            try:
+                await asyncio.Future()
+            except asyncio.CancelledError:
+                cancelling.set()
+                if during_deadline_cleanup:
+                    await asyncio.Future()
+                raise
+
+        llm.side_effect = classify
+        task = asyncio.create_task(agent_executor.SupervisorAgentExecutor().execute(context, queue))
+        try:
+            await asyncio.wait_for(started.wait(), timeout=3)
+            if during_deadline_cleanup:
+                await asyncio.wait_for(cancelling.wait(), timeout=3)
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await asyncio.wait_for(task, timeout=3)
+            assert cancelling.is_set()
+            assert task.cancelled()
+            assert asyncio.all_tasks() == {asyncio.current_task()}
+        finally:
+            if not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+
+    asyncio.run(run())
+
+    llm.assert_awaited_once_with(message)
+    router.assert_not_called()
+    specialist.assert_not_called()
+    queue.enqueue_event.assert_not_called()
 
 
 def test_invalid_configuration_prevents_executor_routing(boundary, monkeypatch):

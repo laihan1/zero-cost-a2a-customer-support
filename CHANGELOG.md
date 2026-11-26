@@ -56,7 +56,15 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Added asynchronous Supervisor intent resolution using the existing LLM configuration. Enabled mode awaits the local classifier once. Disabled mode uses deterministic keyword routing without any Ollama request.
 - Preserved the input validation boundary, original specialist request text, and native A2A response parts. Configuration and classification errors propagate separately from specialist communication errors.
 - Passed 66 Supervisor and executor tests in 0.89 s, 152 shared validation and LLM tests in 0.62 s, 11 integration tests in 1.48 s, and all 321 regression tests in 4.40 s with `LLM_ENABLED=false`. Enabled-mode tests mocked inference.
-- Failure-triggered fallback and the Supervisor classification deadline remain pending. Live enabled-mode Supervisor routing has yet to be verified.
+- Committed and pushed as `0fb8484` (`feat: integrate local LLM intent classification into supervisor routing`).
+
+### Phase 5.4.4 — Deterministic Fallback and Classification Deadline
+
+- Added one keyword fallback for `LLMDisabledError`, `LLMUnavailableError`, `LLMTimeoutError`, `LLMResponseError`, `httpx.HTTPStatusError`, and confirmed classification deadline expiration. Unexpected errors and external cancellation still propagate.
+- Added a classification-only `asyncio.timeout()` budget using `LLM_TIMEOUT` (default 15 seconds). The existing HTTPX operation timeouts run concurrently. Keyword fallback and specialist communication remain outside the timeout context.
+- Added stable routing-source and fallback-reason diagnostics without logging customer text or model output.
+- Passed 79 Supervisor and executor tests in 1.11 s, 152 shared validation and LLM tests in 0.69 s, 11 focused integration tests in 1.48 s, and all 334 regression tests in 4.49 s with `LLM_ENABLED=false` for the service runs.
+- The deadline is cooperative. Live enabled-mode routing, Ollama outages, cold-start fallback, server-side cancellation, and production latency remain unverified.
 
 ## [0.4.0] — Supervisor Architecture
 

@@ -102,15 +102,15 @@ Architecture requirements:
 - Validate all AI-generated structured outputs.
 - Avoid replacing A2A communication with direct Python function calls between independent agent services.
 
-Approved Phase 5.4 design: use LLM-first routing with deterministic keyword fallback for explicitly expected LLM failures. Reject invalid customer input before routing. Add a strict Supervisor-level classification deadline in a later subphase. Preserve the existing A2A and AgentResponse contracts with minimal changes.
+Approved Phase 5.4 design: use LLM-first routing with deterministic keyword fallback for explicitly expected LLM failures. Reject invalid customer input before routing. Apply a cooperative Supervisor-level classification deadline. Preserve the existing A2A and AgentResponse contracts with minimal changes.
 
 ## 6. Current Implementation Baseline
 
 Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
-Current branch: `feature/phase-5-local-llm` at confirmed HEAD `6cfb51c` (`feat: harden customer message validation before supervisor routing`). Phase 5.4.2 is committed and pushed.
+Current branch: `feature/phase-5-local-llm` at confirmed HEAD `0fb8484` (`feat: integrate local LLM intent classification into supervisor routing`). Phase 5.4.3 is committed and pushed.
 
-Phase 5.4.3 Supervisor LLM routing is implemented, verified, and uncommitted. Phase 5.4.4 failure-triggered fallback and the Supervisor classification deadline require user approval.
+Phase 5.4.4 fallback and classification deadline are implemented, regression-verified, and uncommitted. Phase 5.4.5 comprehensive automated testing requires user approval.
 
 Implemented agents:
 
@@ -149,6 +149,8 @@ Verified test baselines:
 - Phase 5.4.2: 139 targeted tests passed in 0.64 s, 60 validation and executor tests passed in 0.85 s, and all 302 regression tests passed in 4.31 s with `LLM_ENABLED=false`.
 
 - Phase 5.4.3: 66 Supervisor/executor tests passed in 0.89 s, 152 shared validation/LLM tests in 0.62 s, 11 focused A2A integration tests in 1.48 s, and 321 regression tests in 4.40 s with `LLM_ENABLED=false`. Enabled-mode tests mocked inference.
+
+- Phase 5.4.4: 79 Supervisor and executor tests passed in 1.11 s, 152 shared validation and LLM tests in 0.69 s, 11 focused integration tests in 1.48 s, and 334 full regression tests in 4.49 s with `LLM_ENABLED=false` for the service runs.
 
 Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
@@ -248,14 +250,17 @@ Supervisor intent resolution:
 
 - `agents.supervisor_agent.supervisor_logic.resolve_intent(user_message)` assumes the Supervisor has already validated the message. It loads and validates all LLM configuration on demand, including in disabled mode.
 - Disabled mode uses `detect_intent()` without an Ollama call or health check. Enabled mode awaits the existing classifier once and forwards the original customer message to the selected specialist.
-- Intent resolution runs outside the specialist communication exception handler. Invalid configuration, classification failures, and cancellation propagate to the calling framework. The `AGENT_UNAVAILABLE` contract still applies to specialist communication failures. Failure-triggered fallback and the Supervisor classification deadline are pending.
+- The recoverable allowlist is `LLMDisabledError`, `LLMUnavailableError`, `LLMTimeoutError`, `LLMResponseError`, `httpx.HTTPStatusError`, and confirmed expiration of the Supervisor timeout context. Each triggers one keyword fallback.
+- The classification-only `asyncio.timeout()` uses `LLMConfig.timeout` (15 seconds by default). It runs concurrently with HTTPX operation timeouts. Keyword routing and specialist calls are outside the timeout context.
+- Invalid configuration, unrelated `TimeoutError`, unexpected errors, and external cancellation propagate. The specialist communication handler still owns `AGENT_UNAVAILABLE`.
+- Routing source values are `llm`, `keyword`, and `keyword_fallback`. Fallback reasons are `llm_disabled`, `llm_unavailable`, `llm_timeout`, `llm_response_error`, `llm_http_error`, and `classification_deadline`. Omit customer text, model output, and exception messages from these diagnostics.
 
 Standalone classifier:
 
 - `shared.intent_classifier.classify_intent(user_message: str) -> str` validates input before inference, limits input to 400 characters, separates system and customer messages, and independently validates structured JSON. It rejects duplicate keys and returns only `order`, `refund`, `product`, or `support`.
 - The classifier enables strict completion validation, requiring `done is True` and `done_reason == "stop"`. Invalid output raises `LLMResponseError`. Existing client exceptions propagate.
 - Defaults are `LLM_ENABLED=false`, `LLM_BASE_URL=http://localhost:11434`, `LLM_MODEL=qwen3:4b`, `LLM_TIMEOUT=15.0`, `LLM_TEMPERATURE=0`, `LLM_NUM_CTX=2048`, `LLM_NUM_PREDICT=64`, `LLM_THINK=false`, and `LLM_KEEP_ALIVE=10m`.
-- Preserve backend validation and implement the approved rule-based fallback in Phase 5.4.4.
+- Preserve backend validation and keep fallback limited to the approved error categories.
 
 Models for future benchmarking:
 
@@ -454,12 +459,12 @@ At the Phase 4 baseline:
 Phase 5.3 source review found no critical, high, or medium-severity issues. Known limitations:
 
 - Seven live smoke cases leave general accuracy, broader prompt-injection resistance, cold-start performance, and reliability at the default 15-second timeout unverified. HTTPX operation timeouts provide no strict end-to-end deadline.
-- Enabled Supervisor routing is covered with mocked inference. Live Supervisor routing, offline fallback, and deadline behavior remain unverified.
+- Enabled Supervisor routing, actual asynchronous deadline expiration, and external cancellation are covered with controlled classifiers. Live enabled-mode routing, Ollama outages, cold-start fallback, server-side cancellation, and production latency remain unverified. Scheduling, blocking work, and cancellation cleanup can delay the cooperative deadline.
 
 Phase 5.3 handoff:
 
 - All 57 project file hashes matched before and after full regression. Windows denied initial process-tree cleanup. All five ports were subsequently confirmed released, while complete process-tree termination remains unverified.
-- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.3.
+- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.4.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 
