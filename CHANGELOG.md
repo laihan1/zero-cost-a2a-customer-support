@@ -11,6 +11,15 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Recorded 100% GPU offloading, 2844 MiB observed GPU memory usage, and approximately 51 tokens/sec during warm generation.
 - Performance follow-up remains open for the initial cold start (134.14 s) and refund case (4.59 s). Full benchmarking and Supervisor integration are pending.
 
+### Phase 5.2 — Shared Local LLM Client
+
+- Added immutable `LLMConfig`, on-demand `load_llm_config(environ=None)`, and an independent LLM exception hierarchy.
+- Added async `chat(messages, *, response_format=None)` using the existing HTTPX dependency. The client defaults to disabled, restricts requests to loopback HTTP, disables environment proxies and redirects, and makes a single request per call.
+- Preserved native HTTP status errors, validated the response envelope and non-empty message content, and kept sensitive payloads out of application logs.
+- Passed 63 new LLM unit tests in 0.27 s and all 189 regression tests in 3.66 s, up from the Phase 4 baseline of 126 tests.
+- Passed 2/2 live `qwen3:4b` client smoke requests with expected and actual intent `order`. The first request took 5.86 s with an unconfirmed cold-start state. The warm request took 0.55 s. The smoke test used a temporary 180-second HTTPX timeout. The default is 15 seconds.
+- Generated intent validation, completion metadata validation, Supervisor integration, deterministic fallback, and benchmarking remain pending.
+
 ## [0.4.0] — Supervisor Architecture
 
 ### Added

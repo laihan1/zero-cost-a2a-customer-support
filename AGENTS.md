@@ -104,7 +104,9 @@ Architecture requirements:
 
 ## 6. Current Implementation Baseline
 
-Baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
+Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
+
+Current development status: Phase 5.2 shared local LLM client implementation and verification complete on `feature/phase-5-local-llm`. Commit and push verification are pending. The Supervisor uses keyword-based routing.
 
 Implemented agents:
 
@@ -132,12 +134,13 @@ Current capabilities:
 - Centralized communication error handling and structured response validation.
 - Configurable console logging using LOG_LEVEL (default INFO).
 
-Last verified test result at this baseline:
+Verified test baselines:
 
-- 126 automated tests passed.
-- 0 failed tests.
+- Phase 4 release: 126 automated tests passed.
+- Phase 5.2: 63 LLM unit tests passed in 0.27 s and all 189 regression tests passed in 3.66 s.
+- Phase 5.2 live client smoke test: 2/2 passed with `qwen3:4b` and matching `order` intents. First request: 5.86 s, with cold-start state unconfirmed. Warm request: 0.55 s. The test used a temporary 180-second HTTPX timeout.
 
-This baseline reflects the latest reported Phase 4 regression results. Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
+Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
 ## 7. A2A SDK Compatibility
 
@@ -219,7 +222,14 @@ If tests cannot be executed, clearly state that they remain unverified.
 
 Phase 5.1 local setup and standalone smoke testing are complete with Ollama 0.40.18 and `qwen3:4b` at `http://localhost:11434/api/chat`. Supervisor integration is pending.
 
-Proposed configuration for later integration:
+Current shared client:
+
+- `shared.config.load_llm_config(environ=None)` loads settings on demand and returns an immutable `LLMConfig`. The default is disabled with a 15-second HTTPX timeout.
+- `shared.llm_client.chat(messages, *, response_format=None)` sends non-streaming Ollama chat requests through HTTPX, forwards an optional JSON Schema, and returns validated, non-empty message text.
+- The client accepts loopback HTTP origins and disables environment proxies and redirects. It preserves native HTTP status errors and uses the independent LLM exception hierarchy for client failures.
+- Application logs omit sensitive payloads. The client makes one request per call. Existing A2A communication and Supervisor routing remain independent of local inference.
+
+Configuration and requirements for later integration:
 
 - Set `think=false`, `temperature=0`, `num_ctx=2048`, `num_predict=64`, and `keep_alive=10m`.
 - Use JSON Schema with an intent enum of `order`, `refund`, `product`, and `support`.
@@ -418,6 +428,8 @@ At the Phase 4 baseline:
 - Automated tests do not cover every failure scenario.
 - No automatic retry or complete A2A task response handling.
 - Clean environment installation has not been fully verified.
+
+Phase 5.2 adds standalone local inference. The HTTPX timeout applies to network operations. A strict end-to-end deadline, generated intent schema validation, and Ollama completion metadata checks are pending. Live smoke results cover two requests with an unconfirmed first-request cold-start state. Accuracy and performance benchmarking are pending, along with intent classification, Supervisor integration, and deterministic fallback.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 

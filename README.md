@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-126%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-189%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -33,10 +33,10 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - Native A2A Text and Data Parts
 - Centralized error handling and response validation
 - Configurable console logging
-- 126 automated tests passed
+- 189 automated tests passed
 - No paid AI API dependency
 
-Phase 5.1 local LLM environment setup and standalone smoke testing are complete. Supervisor integration, database integration, and frontend development are planned for upcoming phases.
+Phase 5.2 shared LLM client implementation and verification are complete. The Supervisor uses keyword-based routing. Local LLM intent classification and Supervisor integration are pending.
 
 ### Phase 5.1 Local LLM Environment
 
@@ -52,6 +52,43 @@ JSON mode produced incorrect or unsupported intents. JSON Schema with enum const
 | `support` | PASS | 0.32 s |
 
 The four-case smoke test scored 4/4 with a mean latency of 1.46 s. Full benchmarking is pending, including follow-up on the initial cold start (134.14 s) and refund latency (4.59 s).
+
+### Phase 5.2 Shared Local LLM Client
+
+`shared.llm_client.chat(messages, *, response_format=None)` sends a non-streaming request to the local Ollama `/api/chat` endpoint using the existing HTTPX dependency. It forwards an optional JSON Schema as `format` and returns non-empty `message.content` as a string. The client validates the response envelope. Generated schema validation and Ollama completion metadata checks remain pending.
+
+`shared.config.load_llm_config(environ=None)` reads the environment on demand and returns an immutable `LLMConfig`. Pass a mapping to load settings independently of the process environment.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `LLM_ENABLED` | `false` | Enable standalone local inference |
+| `LLM_BASE_URL` | `http://localhost:11434` | Loopback HTTP origin |
+| `LLM_MODEL` | `qwen3:4b` | Local model name |
+| `LLM_TIMEOUT` | `15.0` | HTTPX timeout in seconds |
+| `LLM_TEMPERATURE` | `0` | Sampling temperature |
+| `LLM_NUM_CTX` | `2048` | Context window in tokens |
+| `LLM_NUM_PREDICT` | `64` | Maximum generated tokens |
+| `LLM_THINK` | `false` | Enable Ollama thinking mode |
+| `LLM_KEEP_ALIVE` | `10m` | Model residency after a request |
+
+With Ollama running and `qwen3:4b` available locally, enable the client in the current PowerShell session.
+
+```powershell
+$env:LLM_ENABLED = "true"
+```
+
+Run this example in Python from the project root in the same shell.
+
+```python
+import asyncio
+
+from shared.llm_client import chat
+
+messages = [{"role": "user", "content": "Say hello in one sentence."}]
+print(asyncio.run(chat(messages)))
+```
+
+The client disables environment proxies and redirects and makes a single request per call. It preserves native `httpx.HTTPStatusError` and uses the independent `LLMError` hierarchy for disabled, transport, timeout, and invalid-response failures. Application logs contain request outcomes and HTTP status codes only. The HTTPX timeout applies to network operations. A strict end-to-end deadline remains outside the client.
 
 ## System Architecture
 
@@ -154,7 +191,7 @@ Set it back to `INFO` for normal operation. Application logs record routing, dis
 
 The current system operates locally without requiring paid AI APIs.
 
-Future local AI integration will use Ollama and Qwen models.
+The standalone local LLM client uses Ollama and Qwen without a paid AI API.
 
 ## Technology Stack
 
@@ -170,13 +207,12 @@ Future local AI integration will use Ollama and Qwen models.
 | HTTPX | HTTP client |
 | Pytest | Automated testing |
 | Git and GitHub | Version control |
+| Ollama and Qwen 3 | Standalone local inference through the shared LLM client |
 
 ### Planned Technologies
 
 | Technology | Purpose |
 |---|---|
-| Ollama | Local LLM runtime |
-| Qwen 3 | Intelligent intent classification |
 | SQLite | Persistent data storage |
 | Streamlit | User interface |
 | Docker | Containerized deployment |
@@ -332,18 +368,22 @@ python -m pytest tests/ -v
 | Structured Integration Tests | 6 | 6 |
 | Executor Failure Tests | 12 | 12 |
 | Logging Configuration | 6 | 6 |
-| Total | 126 | 126 |
+| Phase 4 regression baseline | 126 | 126 |
+| Phase 5.2 LLM configuration and client tests | 63 | 63 |
+| Full Phase 5.2 regression | 189 | 189 |
 
-Test pass rate: 100% for the current test suite.
+The LLM unit suite passed in 0.27 s and the full regression passed in 3.66 s.
 
-Manual checks also covered Order Agent shutdown, Supervisor and Refund fallback responses, continued Product Agent operation, console logging, and recovery after restarting Order Agent.
+The live client smoke test passed 2/2 requests with `qwen3:4b`. Both returned the expected `order` intent. The first request took 5.86 s and had an unconfirmed cold-start state. The warm request took 0.55 s. The test used a temporary 180-second HTTPX timeout. These two observations provide smoke coverage only, with accuracy and performance benchmarking pending.
+
+Phase 4 manual checks covered Order Agent shutdown, Supervisor and Refund fallback responses, continued Product Agent operation, console logging, and recovery after restarting Order Agent.
 
 These results verify the implemented test scenarios and do not represent complete code coverage or production readiness.
 
 ## Current Limitations
 
 - Intent routing relies on keyword matching.
-- No local LLM is currently integrated.
+- LLM intent classification, Supervisor integration, and deterministic fallback are pending.
 - Order and product information uses mock data.
 - Agent Card discovery uses predefined URLs.
 - Refund eligibility does not verify delivery dates.
@@ -362,7 +402,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.1 complete. Supervisor integration pending. |
+| 5 | Local LLM Integration | Phase 5.2 implementation and verification complete. Supervisor integration pending. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

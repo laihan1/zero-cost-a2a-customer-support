@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.1 environment setup and standalone smoke testing complete.
+- Phase 5.2 shared LLM client implementation and verification complete.
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 126/126 passed
+- Automated tests: 189/189 passed (Phase 4 baseline: 126/126)
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -140,15 +140,24 @@ Target version: v0.5.0
 
 The initial cold start (134.14 s) and refund smoke-case latency (4.59 s) remain open for performance follow-up. See [README.md](README.md#phase-51-local-llm-environment) for the smoke-test results.
 
-### Remaining Phase 5 Work
+### Phase 5.2 — Shared Local LLM Client
+
+- [x] Add on-demand immutable LLM configuration and an independent exception hierarchy
+- [x] Implement standalone async Ollama chat with optional JSON Schema forwarding
+- [x] Pass all 63 new LLM unit tests and all 189 automated regression tests
+- [x] Pass both live Ollama client smoke requests with `qwen3:4b`
+- [x] Document the client, verified results, and limitations
+- [ ] Commit Phase 5.2 changes
+- [ ] Push Phase 5.2 changes and verify the push
+
+### Phase 5.3 and Later — Pending
 
 - [ ] Integrate Ollama into the Supervisor
 - [ ] Benchmark Qwen 3 4B beyond the smoke tests
 - [ ] Test Qwen 3 8B
-- [ ] Implement LLM client
 - [ ] Implement intelligent intent classification
 - [ ] Implement structured JSON output
-- [ ] Validate LLM responses
+- [ ] Validate generated intent output and Ollama completion metadata
 - [ ] Implement rule-based fallback
 - [ ] Create an evaluation dataset
 - [ ] Benchmark classification accuracy
@@ -207,7 +216,7 @@ Target version: v1.0.0
 - Refund eligibility is preliminary and does not verify delivery dates.
 - Refund transactions are not actually processed.
 - Agent services require manual startup.
-- No local LLM is currently integrated.
+- Supervisor routing uses keyword matching. LLM intent classification and deterministic fallback are pending.
 - No persistent conversation memory is available.
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.
