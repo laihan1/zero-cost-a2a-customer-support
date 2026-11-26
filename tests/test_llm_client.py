@@ -152,3 +152,57 @@ def test_logs_exclude_sensitive_data(mock_client, caplog):
     for secret in ("Private customer message", "Private answer", "credential=sensitive"):
         assert secret not in caplog.text
         assert secret not in str(exc.value)
+
+
+def test_chat_accepts_normal_completion(mock_client):
+    post = mock_client[1]
+    content = '{"intent": "order"}'
+    post.return_value = response(json={
+        "message": {"content": content},
+        "done": True,
+        "done_reason": "stop",
+    })
+
+    assert asyncio.run(chat(MESSAGES, require_complete=True)) == content
+    post.assert_awaited_once()
+
+
+@pytest.mark.parametrize("metadata", [
+    {"done_reason": "stop"},
+    {"done": True},
+    {"done": False, "done_reason": "stop"},
+    {"done": 1, "done_reason": "stop"},
+    {"done": "true", "done_reason": "stop"},
+    {"done": None, "done_reason": "stop"},
+    {"done": True, "done_reason": "length"},
+    {"done": True, "done_reason": "unknown"},
+    {"done": True, "done_reason": 1},
+    {"done": True, "done_reason": None},
+])
+def test_chat_rejects_invalid_completion_metadata(mock_client, metadata):
+    post = mock_client[1]
+    post.return_value = response(json={
+        "message": {"content": '{"intent": "order"}'},
+        **metadata,
+    })
+
+    with pytest.raises(LLMResponseError, match="completion"):
+        asyncio.run(chat(MESSAGES, require_complete=True))
+    post.assert_awaited_once()
+
+
+def test_default_chat_does_not_require_normal_completion(mock_client):
+    mock_client[1].return_value = response(json={
+        "message": {"content": "Reply"},
+        "done": False,
+        "done_reason": "length",
+    })
+
+    assert asyncio.run(chat(MESSAGES)) == "Reply"
+
+
+def test_strict_chat_preserves_http_status_error(mock_client):
+    mock_client[1].return_value = response(503, json={"error": "Unavailable"})
+    with pytest.raises(httpx.HTTPStatusError) as exc:
+        asyncio.run(chat(MESSAGES, require_complete=True))
+    assert exc.value.response.status_code == 503

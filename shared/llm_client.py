@@ -14,8 +14,13 @@ from shared.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-async def chat(messages: list[dict], *, response_format: dict | None = None) -> str:
-    """Send an Ollama chat request and return its message content."""
+async def chat(
+    messages: list[dict],
+    *,
+    response_format: dict | None = None,
+    require_complete: bool = False,
+) -> str:
+    """Return Ollama message content, optionally requiring normal completion."""
     config = load_llm_config()
     if not config.enabled:
         raise LLMDisabledError("Local LLM is disabled.")
@@ -66,6 +71,12 @@ async def chat(messages: list[dict], *, response_format: dict | None = None) -> 
     if "error" in result:
         logger.error("Local LLM returned an API error")
         raise LLMResponseError("Local LLM returned an API error.")
+
+    if require_complete and (
+        result.get("done") is not True or result.get("done_reason") != "stop"
+    ):
+        logger.error("Invalid local LLM completion metadata")
+        raise LLMResponseError("Expected normal local LLM completion.")
 
     message = result.get("message")
     content = message.get("content") if isinstance(message, dict) else None

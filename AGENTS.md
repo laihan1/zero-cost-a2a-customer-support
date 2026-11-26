@@ -106,7 +106,9 @@ Architecture requirements:
 
 Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
-Current development status: Phase 5.2 shared local LLM client implementation and verification complete on `feature/phase-5-local-llm`. Commit and push verification are pending. The Supervisor uses keyword-based routing.
+Current branch: `feature/phase-5-local-llm` at confirmed HEAD `98e1468` (`feat: implement shared local Ollama client with configuration and tests`). Phase 5.2 is committed and pushed.
+
+Phase 5.3 implementation and verification are complete. Phase 5.3.7 documentation is updated. Manual Git worktree checks, commit, and push remain pending. Phase 5.4 Supervisor LLM integration and deterministic fallback are proposed and require user approval before implementation.
 
 Implemented agents:
 
@@ -128,7 +130,7 @@ Current capabilities:
 - Preliminary refund eligibility.
 - Product information and recommendations.
 - Refund Agent to Order Agent collaboration.
-- Centralized Supervisor routing and orchestration.
+- Centralized Supervisor routing and orchestration using the keyword router and A2A. The standalone LLM classifier runs independently.
 - Shared A2A client, registry, discovery and configuration.
 - Native A2A Text and Data Parts using AgentResponse.
 - Centralized communication error handling and structured response validation.
@@ -139,6 +141,8 @@ Verified test baselines:
 - Phase 4 release: 126 automated tests passed.
 - Phase 5.2: 63 LLM unit tests passed in 0.27 s and all 189 regression tests passed in 3.66 s.
 - Phase 5.2 live client smoke test: 2/2 passed with `qwen3:4b` and matching `order` intents. First request: 5.86 s, with cold-start state unconfirmed. Warm request: 0.55 s. The test used a temporary 180-second HTTPX timeout.
+
+- Phase 5.3: 134 targeted tests passed in 0.51 s (74 existing and 60 new). All 249 regression tests passed in 3.75 s with `LLM_ENABLED=false`. Seven live classifier cases passed at 64 tokens with `qwen3:4b` already loaded and a temporary 180-second HTTPX timeout.
 
 Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
@@ -225,14 +229,15 @@ Phase 5.1 local setup and standalone smoke testing are complete with Ollama 0.40
 Current shared client:
 
 - `shared.config.load_llm_config(environ=None)` loads settings on demand and returns an immutable `LLMConfig`. The default is disabled with a 15-second HTTPX timeout.
-- `shared.llm_client.chat(messages, *, response_format=None)` sends non-streaming Ollama chat requests through HTTPX, forwards an optional JSON Schema, and returns validated, non-empty message text.
+- `shared.llm_client.chat(messages, *, response_format=None, require_complete=False)` sends non-streaming Ollama chat requests through HTTPX, forwards an optional JSON Schema, and returns validated, non-empty message text.
 - The client accepts loopback HTTP origins and disables environment proxies and redirects. It preserves native HTTP status errors and uses the independent LLM exception hierarchy for client failures.
 - Application logs omit sensitive payloads. The client makes one request per call. Existing A2A communication and Supervisor routing remain independent of local inference.
 
-Configuration and requirements for later integration:
+Standalone classifier:
 
-- Set `think=false`, `temperature=0`, `num_ctx=2048`, `num_predict=64`, and `keep_alive=10m`.
-- Use JSON Schema with an intent enum of `order`, `refund`, `product`, and `support`.
+- `shared.intent_classifier.classify_intent(user_message: str) -> str` validates input before inference, limits input to 400 characters, separates system and customer messages, and independently validates structured JSON. It rejects duplicate keys and returns only `order`, `refund`, `product`, or `support`.
+- The classifier enables strict completion validation, requiring `done is True` and `done_reason == "stop"`. Invalid output raises `LLMResponseError`. Existing client exceptions propagate.
+- Defaults are `LLM_ENABLED=false`, `LLM_BASE_URL=http://localhost:11434`, `LLM_MODEL=qwen3:4b`, `LLM_TIMEOUT=15.0`, `LLM_TEMPERATURE=0`, `LLM_NUM_CTX=2048`, `LLM_NUM_PREDICT=64`, `LLM_THINK=false`, and `LLM_KEEP_ALIVE=10m`.
 - Require backend validation and a rule-based fallback when integrating the model into Supervisor routing.
 
 Models for future benchmarking:
@@ -429,7 +434,16 @@ At the Phase 4 baseline:
 - No automatic retry or complete A2A task response handling.
 - Clean environment installation has not been fully verified.
 
-Phase 5.2 adds standalone local inference. The HTTPX timeout applies to network operations. A strict end-to-end deadline, generated intent schema validation, and Ollama completion metadata checks are pending. Live smoke results cover two requests with an unconfirmed first-request cold-start state. Accuracy and performance benchmarking are pending, along with intent classification, Supervisor integration, and deterministic fallback.
+Phase 5.3 source review found no critical, high, or medium-severity issues. Known limitations:
+
+- An isolated Unicode surrogate can pass validation and raise `UnicodeEncodeError` during request construction. The 400-character limit is conservative and gives no token-budget guarantee.
+- Seven live smoke cases leave general accuracy, broader prompt-injection resistance, cold-start performance, and reliability at the default 15-second timeout unverified. HTTPX operation timeouts provide no strict end-to-end deadline.
+- The Supervisor uses keyword routing. LLM integration and deterministic fallback remain proposed. The LLM-disabled regression ran with Ollama reachable, so behavior with Ollama completely unavailable remains unverified.
+
+Phase 5.3 handoff:
+
+- All 57 project file hashes matched before and after full regression. Windows denied initial process-tree cleanup. All five ports were subsequently confirmed released, while complete process-tree termination remains unverified.
+- Direct Git worktree commands returned `fatal: this operation must be run in a work tree` in Codex. Verify status and whitespace manually before committing or pushing Phase 5.3.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 

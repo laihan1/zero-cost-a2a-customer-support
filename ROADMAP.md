@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.2 shared LLM client implementation and verification complete.
+- Phase 5.3 standalone intent classifier implemented and verified. Manual Git checkpoint pending.
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 189/189 passed (Phase 4 baseline: 126/126)
+- Automated tests: 249/249 passed (Phase 5.2 baseline: 189/189)
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -147,25 +147,38 @@ The initial cold start (134.14 s) and refund smoke-case latency (4.59 s) remain 
 - [x] Pass all 63 new LLM unit tests and all 189 automated regression tests
 - [x] Pass both live Ollama client smoke requests with `qwen3:4b`
 - [x] Document the client, verified results, and limitations
-- [ ] Commit Phase 5.2 changes
-- [ ] Push Phase 5.2 changes and verify the push
+- [x] Commit Phase 5.2 changes as `98e1468`
+- [x] Push the Phase 5.2 commit to `feature/phase-5-local-llm`
 
-### Phase 5.3 and Later — Pending
+### Phase 5.3 — Standalone Structured Intent Classifier
 
-- [ ] Integrate Ollama into the Supervisor
-- [ ] Benchmark Qwen 3 4B beyond the smoke tests
-- [ ] Test Qwen 3 8B
-- [ ] Implement intelligent intent classification
-- [ ] Implement structured JSON output
-- [ ] Validate generated intent output and Ollama completion metadata
-- [ ] Implement rule-based fallback
-- [ ] Create an evaluation dataset
-- [ ] Benchmark classification accuracy
-- [ ] Benchmark response latency
-- [ ] Measure hardware resource usage
-- [ ] Test prompt injection resistance
-- [ ] Document benchmark results
-- [ ] Push to GitHub
+- [x] 5.3.1 — Classifier contract and prompt
+- [x] 5.3.2 — Structured JSON Schema
+- [x] 5.3.3 — Strict output validation
+- [x] 5.3.4 — Completion metadata and error handling
+- [x] 5.3.5 — Source review, 134 targeted tests, and seven live smoke tests at 64 tokens
+- [x] 5.3.6 — Full regression with LLM disabled and 249 tests passed
+- [x] 5.3.7 — Update documentation
+- [ ] 5.3.7 — Complete manual Git worktree verification, commit, and push
+
+### Phase 5.4 — Supervisor LLM Integration and Deterministic Fallback
+
+All subphases are proposed and pending user approval.
+
+- [ ] 5.4.1 — Review routing and error boundaries. Define when to invoke the classifier, how it relates to keyword routing, and which inputs and failures should trigger fallback.
+- [ ] 5.4.2 — Harden input validation. Address isolated Unicode surrogates, evaluate oversized messages, preserve sanitized errors, and test how invalid input affects routing.
+- [ ] 5.4.3 — Integrate the standalone classifier into the Supervisor while preserving the registry, A2A communication, and deterministic LLM-disabled behavior. Avoid unnecessary inference.
+- [ ] 5.4.4 — Implement the approved keyword fallback policy for disabled inference, unavailable Ollama, timeouts, HTTP failures, and invalid output. Preserve cancellation and unexpected error propagation.
+- [ ] 5.4.5 — Test successful classification, disabled mode, fallback, timeouts, unavailability, malformed and incomplete output, specialist routing, and structured response contracts.
+- [ ] 5.4.6 — Verify live Supervisor routing and fallback with local Ollama, measure initial end-to-end latency, and verify existing workflows.
+- [ ] 5.4.7 — Run the full regression, document verified results and limitations, and prepare a manual Git checkpoint.
+
+### Phase 5.5 — Accuracy and Performance Benchmarking
+
+- [ ] Build a representative dataset and measure overall and per-intent accuracy, including ambiguous, multi-intent, multilingual, and prompt-injection cases.
+- [ ] Compare cold-start and warm inference latency. Evaluate the 400-character input limit and 15-second HTTPX timeout.
+- [ ] Compare Qwen3 4B and 8B where hardware permits. Measure CPU, GPU, RAM, and VRAM usage.
+- [ ] Document accuracy, latency, and resource trade-offs.
 
 ## Phase 6 — Database and Frontend
 
@@ -216,7 +229,7 @@ Target version: v1.0.0
 - Refund eligibility is preliminary and does not verify delivery dates.
 - Refund transactions are not actually processed.
 - Agent services require manual startup.
-- Supervisor routing uses keyword matching. LLM intent classification and deterministic fallback are pending.
+- Supervisor routing uses keyword matching. Supervisor LLM integration and deterministic fallback are pending.
 - No persistent conversation memory is available.
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.

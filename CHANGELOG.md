@@ -18,7 +18,30 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Preserved native HTTP status errors, validated the response envelope and non-empty message content, and kept sensitive payloads out of application logs.
 - Passed 63 new LLM unit tests in 0.27 s and all 189 regression tests in 3.66 s, up from the Phase 4 baseline of 126 tests.
 - Passed 2/2 live `qwen3:4b` client smoke requests with expected and actual intent `order`. The first request took 5.86 s with an unconfirmed cold-start state. The warm request took 0.55 s. The smoke test used a temporary 180-second HTTPX timeout. The default is 15 seconds.
-- Generated intent validation, completion metadata validation, Supervisor integration, deterministic fallback, and benchmarking remain pending.
+- Committed and pushed as `98e1468` (`feat: implement shared local Ollama client with configuration and tests`).
+
+### Phase 5.3 — Standalone Structured Intent Classifier
+
+#### Added
+
+- Asynchronous local intent classification with a four-intent JSON Schema, a 400-character input limit, strict generated JSON validation, and duplicate-key rejection.
+- Classifier and client tests for input validation, structured output, completion metadata, and error propagation.
+
+#### Changed
+
+- The shared LLM client supports opt-in completion validation. Strict mode requires `done is True` and `done_reason == "stop"`. Existing callers retain the default behavior.
+
+#### Verified
+
+- Passed 134 targeted tests in 0.51 s and all 249 full regression tests in 3.75 s.
+- Passed 7/7 live classifier smoke tests at the existing 64-token allowance using an already-loaded `qwen3:4b` model and a temporary 180-second HTTPX timeout.
+- Verified all five integration services and existing A2A and Supervisor workflows with `LLM_ENABLED=false`.
+
+#### Known Limitations
+
+- Isolated Unicode surrogate input can raise `UnicodeEncodeError` during request construction.
+- Accuracy benchmarking, broader prompt-injection evaluation, cold-start verification, and default-timeout reliability are pending. Supervisor LLM integration and deterministic fallback are proposed for Phase 5.4.
+- Manual Git worktree verification, commit, and push remain pending.
 
 ## [0.4.0] — Supervisor Architecture
 

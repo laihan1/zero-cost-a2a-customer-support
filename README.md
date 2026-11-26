@@ -5,7 +5,7 @@ A multi-agent customer support system built using the Agent-to-Agent (A2A) Proto
 ![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![A2A](https://img.shields.io/badge/A2A-1.0-purple)
-![Tests](https://img.shields.io/badge/tests-189%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-249%20passed-brightgreen)
 ![Paid API Cost](https://img.shields.io/badge/paid%20API%20cost-RM0-brightgreen)
 
 ## Project Overview
@@ -14,7 +14,7 @@ Traditional customer support chatbots often rely on a single system to handle mu
 
 This project explores a modular multi-agent architecture where specialized agents communicate and collaborate using the A2A Protocol.
 
-The long-term goal is to integrate local LLMs, persistent data storage, intelligent routing, and a user-friendly interface while maintaining zero paid AI API costs.
+The system provides keyword-based agent routing and a standalone local LLM intent classifier. Planned work includes Supervisor LLM integration, persistent storage, and a user interface, with zero paid AI API costs.
 
 ## Current Development Status
 
@@ -33,10 +33,10 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - Native A2A Text and Data Parts
 - Centralized error handling and response validation
 - Configurable console logging
-- 189 automated tests passed
+- 249 automated tests passed
 - No paid AI API dependency
 
-Phase 5.2 shared LLM client implementation and verification are complete. The Supervisor uses keyword-based routing. Local LLM intent classification and Supervisor integration are pending.
+Phase 5.3 standalone intent classification is implemented and verified. Its manual Git checkpoint is pending. The Supervisor continues to use keyword-based routing.
 
 ### Phase 5.1 Local LLM Environment
 
@@ -55,7 +55,7 @@ The four-case smoke test scored 4/4 with a mean latency of 1.46 s. Full benchmar
 
 ### Phase 5.2 Shared Local LLM Client
 
-`shared.llm_client.chat(messages, *, response_format=None)` sends a non-streaming request to the local Ollama `/api/chat` endpoint using the existing HTTPX dependency. It forwards an optional JSON Schema as `format` and returns non-empty `message.content` as a string. The client validates the response envelope. Generated schema validation and Ollama completion metadata checks remain pending.
+`shared.llm_client.chat(messages, *, response_format=None, require_complete=False)` sends a non-streaming request to the local Ollama `/api/chat` endpoint using the existing HTTPX dependency. It forwards an optional JSON Schema as `format` and returns non-empty `message.content` as a string. The client validates the response envelope. Callers can opt into normal-completion checks with `require_complete=True`. The default preserves existing caller behavior.
 
 `shared.config.load_llm_config(environ=None)` reads the environment on demand and returns an immutable `LLMConfig`. Pass a mapping to load settings independently of the process environment.
 
@@ -90,7 +90,30 @@ print(asyncio.run(chat(messages)))
 
 The client disables environment proxies and redirects and makes a single request per call. It preserves native `httpx.HTTPStatusError` and uses the independent `LLMError` hierarchy for disabled, transport, timeout, and invalid-response failures. Application logs contain request outcomes and HTTP status codes only. The HTTPX timeout applies to network operations. A strict end-to-end deadline remains outside the client.
 
+### Phase 5.3 Standalone Structured Intent Classifier
+
+`await classify_intent(user_message)` from `shared.intent_classifier` returns one of `order`, `refund`, `product`, or `support`. It rejects non-string, blank, and over-400-character inputs before inference without truncating messages. The classifier separates system instructions from customer text and forwards a JSON Schema that requires exactly one `intent` field. It independently rejects malformed JSON, duplicate keys, extra fields, and values outside the supported enum.
+
+The classifier requires `done is True` and `done_reason == "stop"`. Incomplete or invalid responses raise `LLMResponseError`. Existing client exceptions propagate to the caller.
+
+To try it, run local Ollama with the configured model available, set `$env:LLM_ENABLED = "true"` in PowerShell, then run the following Python example from the project root in the same shell.
+
+```python
+import asyncio
+
+from shared.intent_classifier import classify_intent
+
+async def main():
+    intent = await classify_intent("Where is my order ORD001?")
+    print(intent)
+
+asyncio.run(main())
+```
+
 ## System Architecture
+
+- Supervisor routing: Customer request → Supervisor → keyword-based routing → specialist agent → structured response.
+- Standalone classification: Customer message → intent classifier → shared LLM client → local Ollama → strict validation → intent string.
 
 ```mermaid
 flowchart TD
@@ -349,6 +372,12 @@ With all five agent services running, open another terminal, activate the virtua
 python -m pytest tests/ -v
 ```
 
+For the Phase 5.3 targeted checks, run the following command. For the full regression, start all five agents and run the suite with `LLM_ENABLED=false` in the agent and test processes.
+
+```powershell
+python -m pytest tests/test_intent_classifier.py tests/test_llm_client.py tests/test_llm_config.py tests/test_supervisor_logic.py -q -p no:cacheprovider
+```
+
 ### Latest Verified Test Results
 
 | Test Category | Passed | Total |
@@ -371,10 +400,26 @@ python -m pytest tests/ -v
 | Phase 4 regression baseline | 126 | 126 |
 | Phase 5.2 LLM configuration and client tests | 63 | 63 |
 | Full Phase 5.2 regression | 189 | 189 |
+| Phase 5.3 targeted verification (74 existing and 60 new cases) | 134 | 134 |
+| Full Phase 5.3 regression | 249 | 249 |
 
-The LLM unit suite passed in 0.27 s and the full regression passed in 3.66 s.
+Phase 5.2 passed 63 LLM unit tests in 0.27 s and 189 full regression tests in 3.66 s. Phase 5.3 passed 134 targeted tests in 0.51 s and 249 full regression tests in 3.75 s, with zero failures, errors, or skips in the full run. All five agent services returned their expected Agent Cards over HTTP 200 with `LLM_ENABLED=false`. Ollama remained reachable. Operation with Ollama completely unavailable remains unverified.
 
 The live client smoke test passed 2/2 requests with `qwen3:4b`. Both returned the expected `order` intent. The first request took 5.86 s and had an unconfirmed cold-start state. The warm request took 0.55 s. The test used a temporary 180-second HTTPX timeout. These two observations provide smoke coverage only, with accuracy and performance benchmarking pending.
+
+Phase 5.3 live smoke testing used Ollama 0.40.18 and an already-loaded `qwen3:4b` model. All seven cases passed with the default 64-token allowance and a temporary 180-second HTTPX timeout. No larger token allowance was needed.
+
+| Case | Expected | Actual | Latency (s) |
+|---|---|---|---:|
+| S01 | order | order | 1.057 |
+| S02 | order | order | 0.586 |
+| S03 | refund | refund | 0.499 |
+| S04 | refund | refund | 0.492 |
+| S05 | product | product | 0.500 |
+| S06 | support | support | 0.481 |
+| S07 | support | support | 0.485 |
+
+Mean latency was 0.586 s, median 0.499 s, minimum 0.481 s, and maximum 1.057 s. These seven cases provide smoke coverage. General accuracy, prompt-injection resistance, classifier cold-start performance, and reliability with the default 15-second timeout remain unverified.
 
 Phase 4 manual checks covered Order Agent shutdown, Supervisor and Refund fallback responses, continued Product Agent operation, console logging, and recovery after restarting Order Agent.
 
@@ -383,7 +428,9 @@ These results verify the implemented test scenarios and do not represent complet
 ## Current Limitations
 
 - Intent routing relies on keyword matching.
-- LLM intent classification, Supervisor integration, and deterministic fallback are pending.
+- Supervisor LLM integration and deterministic fallback are pending.
+- The conservative 400-character limit does not guarantee a token budget. An isolated Unicode surrogate can pass input validation and raise `UnicodeEncodeError` during HTTPX request construction.
+- The HTTPX timeout governs network operations. A strict end-to-end deadline remains outside the client.
 - Order and product information uses mock data.
 - Agent Card discovery uses predefined URLs.
 - Refund eligibility does not verify delivery dates.
@@ -402,7 +449,7 @@ These results verify the implemented test scenarios and do not represent complet
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.2 implementation and verification complete. Supervisor integration pending. |
+| 5 | Local LLM Integration | Phase 5.3 implementation and verification complete. Manual Git checkpoint pending. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 
