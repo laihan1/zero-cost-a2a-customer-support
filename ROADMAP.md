@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.4.5 automated pipeline verification committed and pushed as `0d494b2`. Phase 5.4.6 live verification is complete.
+- Phase 5.4.6 live verification is committed and pushed as `0a6fbe0`. Phase 5.4.7 final regression and documentation reconciliation are complete. The Git checkpoint remains pending.
 - Implemented agents: 5
 - Planned agents: 5
-- Automated tests: 361/361 passed (Phase 5.4.4 baseline: 334/334)
+- Final regression: 361/361 passed in 5.10 s with inference disabled. The Phase 5.4.6 offline run remains 361/361 in 5.59 s.
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -138,7 +138,7 @@ Target version: v0.5.0
 - [x] Run standalone intent smoke tests with JSON Schema enum constraints
 - [x] Document the smoke results and proposed configuration
 
-The initial cold start (134.14 s) and refund smoke-case latency (4.59 s) remain open for performance follow-up. See [README.md](README.md#phase-51-local-llm-environment) for the smoke-test results.
+The Phase 5.1 standalone cold-start observation (134.14 s) and refund smoke-case latency (4.59 s) are historical performance observations. Phase 5.4.6 later recorded a model-unloaded Supervisor request in 9.4827 s. Broader benchmarking remains pending. See [README.md](README.md#phase-51-local-llm-environment) for the smoke-test results.
 
 ### Phase 5.2 — Shared Local LLM Client
 
@@ -180,7 +180,9 @@ Approved architecture: Use LLM-first routing with deterministic keyword fallback
 - [x] 5.4.5 — Complete Git checkpoint (`0d494b2`).
 
 - [x] 5.4.6 — Verify live cold and warm routing, semantic differences, native response compatibility, actual Ollama outage fallback, and automatic recovery on the same Supervisor. Pass all 361 tests with Ollama unavailable and inference disabled.
-- [ ] 5.4.7 — Run the full regression, document verified results and limitations, and prepare a manual Git checkpoint.
+- [x] 5.4.6 — Complete Git checkpoint (`0a6fbe0`).
+- [x] 5.4.7 — Pass the final full regression and reconcile documentation.
+- [ ] 5.4.7 — Verify the real Git worktree, commit the documentation, and push and verify the checkpoint.
 
 ### Phase 5.5 — Accuracy and Performance Benchmarking
 

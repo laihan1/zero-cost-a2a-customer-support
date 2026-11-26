@@ -36,7 +36,7 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - 361 automated tests passed
 - No paid AI API dependency
 
-Phase 5.4.5 automated pipeline verification was completed, committed, and pushed as `0d494b2`. Phase 5.4.6 verified live routing, fallback during an actual Ollama outage, automatic recovery, and keyword-only operation offline.
+Phase 5.4.6 live verification was committed and pushed as `0a6fbe0`. It verified model-unloaded and warm routing, fallback during an actual Ollama outage, automatic recovery, and keyword-only operation offline. Phase 5.4.7 final regression passed. The documentation Git checkpoint remains pending.
 
 ### Phase 5.1 Local LLM Environment
 
@@ -453,7 +453,7 @@ Phase 5.3 live smoke testing used Ollama 0.40.18 and an already-loaded `qwen3:4b
 | S06 | support | support | 0.481 |
 | S07 | support | support | 0.485 |
 
-Mean latency was 0.586 s, median 0.499 s, minimum 0.481 s, and maximum 1.057 s. These seven cases provide smoke coverage. General accuracy, prompt-injection resistance, classifier cold-start performance, and reliability with the default 15-second timeout remain unverified.
+Mean latency was 0.586 s, median 0.499 s, minimum 0.481 s, and maximum 1.057 s. That Phase 5.3 run used a temporary 180-second HTTPX timeout and a warm model. Phase 5.4.6 later verified a model-unloaded Supervisor request with the default 15-second classification budget. General accuracy, broader prompt-injection resistance, and default-budget reliability across representative workloads remain unverified.
 
 Phase 4 manual checks covered Order Agent shutdown, Supervisor and Refund fallback responses, continued Product Agent operation, console logging, and recovery after restarting Order Agent.
 
@@ -492,6 +492,15 @@ The same enabled Supervisor (PID 28276) stayed running without restart or reconf
 
 With Ollama reachable and inference disabled, the focused A2A suite passed 11 tests in 1.22 s, the pipeline suite passed 27 in 0.95 s, and the full suite passed 361 in 5.87 s. The separate offline full regression passed all 361 tests in 5.59 s, with Ollama unreachable at every check. Task-owned agents exited and released ports 9995–9999. The original Ollama endpoint and installed model were available after the final operator restart. Comprehensive benchmarking and server-side cancellation remain unverified.
 
+### Phase 5.4.7 Final Regression
+
+The full suite passed **361 tests in 5.10 s** with zero failures, errors, or skips on the `0a6fbe0` baseline. All five Agent Cards returned HTTP 200 and all agents and Pytest used `LLM_ENABLED=false`. Ollama was reachable at both checks and was left running. The earlier Phase 5.4.6 offline result remains 361 tests in 5.59 s. The live outage test was not repeated.
+
+```powershell
+$env:LLM_ENABLED = "false"
+& .\.venv\Scripts\python.exe -m pytest tests/ -q -p no:cacheprovider
+```
+
 ## Current Limitations
 
 - “When are you open?” reaches Support but returns a clarification prompt. Server-side cancellation and cold-start fallback remain unverified. Comprehensive accuracy and latency benchmarking is pending.
@@ -504,6 +513,7 @@ With Ollama reachable and inference disabled, the focused A2A suite passed 11 te
 - Persistent conversation memory is not implemented.
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.
+- Clean-environment installation and CI-based regression remain unverified.
 - Automated tests do not cover all failure scenarios.
 
 ## Development Roadmap
@@ -514,7 +524,7 @@ With Ollama reachable and inference disabled, the focused A2A suite passed 11 te
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.4.6 live verification complete. Final regression and documentation checkpoint pending. |
+| 5 | Local LLM Integration | Phase 5.4.7 regression passed and documentation reconciled. Git checkpoint pending. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

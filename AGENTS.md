@@ -108,9 +108,9 @@ Approved Phase 5.4 design: use LLM-first routing with deterministic keyword fall
 
 Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
-Current branch: `feature/phase-5-local-llm` at confirmed HEAD `0d494b2` (`test: add cross-layer LLM pipeline and concurrent request verification`). Phase 5.4.5 is committed and pushed.
+Current branch: `feature/phase-5-local-llm`. The confirmed committed baseline for Phase 5.4.7 is `0a6fbe0` (`docs: verify live Ollama routing, outage fallback and automatic recovery`), which matched the live remote branch.
 
-Phase 5.4.6 live verification is complete and its documentation is uncommitted. It covers cold and warm routing, semantic comparison, native A2A responses, actual outage fallback, same-Supervisor recovery, and disabled-mode offline regression. Phase 5.4.7 requires user approval.
+Phase 5.4.6 is complete, committed, and pushed. Phase 5.4.7 final regression and documentation reconciliation are complete. Its documentation-only Git checkpoint remains pending. Phase 5.5 benchmarking requires user approval.
 
 Implemented agents:
 
@@ -155,6 +155,8 @@ Verified test baselines:
 - Phase 5.4.5: 27 pipeline tests passed in 1.14 s, 79 Supervisor and executor tests in 1.10 s, 152 shared validation and LLM tests in 0.67 s, 11 focused integration tests in 1.77 s, and 361 full regression tests in 6.35 s. Each of three timing-sensitive repeats passed all seven selected tests.
 
 - Phase 5.4.6: cold request 9.4827 s with LLM routing. All 12 warm cases used LLM routing (mean 0.5953 s end to end). All four offline workflows passed with enabled keyword fallback and with disabled keyword routing. The disabled full regression passed 361 tests in 5.87 s with Ollama reachable and 361 in 5.59 s with Ollama unavailable.
+
+- Phase 5.4.7: 361 regression tests passed in 5.10 s with zero failures, errors, or skips. All five Agent Cards returned HTTP 200. Services and Pytest used `LLM_ENABLED=false`. Ollama was reachable at the before and after checks.
 
 Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
@@ -444,13 +446,10 @@ Verify existing Git tags before creating new tags.
 
 ## 17. Known Technical Limitations
 
-At the Phase 4 baseline:
-
-- Keyword-based intent routing.
+Current system limitations:
 - Hardcoded mock data.
 - Predefined Agent Card URLs.
 - Manual service startup.
-- No local LLM integration.
 - No persistent database.
 - No persistent conversation memory.
 - No authentication or authorization.
@@ -460,19 +459,17 @@ At the Phase 4 baseline:
 - No actual refund transactions.
 - Automated tests do not cover every failure scenario.
 - No automatic retry or complete A2A task response handling.
-- Clean environment installation has not been fully verified.
+- Clean-environment installation and CI-based regression remain unverified.
 
-Phase 5.3 source review found no critical, high, or medium-severity issues. Known limitations:
+LLM verification boundaries:
 
-- Seven live smoke cases leave general accuracy, broader prompt-injection resistance, cold-start performance, and reliability at the default 15-second timeout unverified. HTTPX operation timeouts provide no strict end-to-end deadline.
+- Phase 5.3 verified seven warm standalone cases using a temporary 180-second timeout. Phase 5.4.6 verified a model-unloaded Supervisor request within the default 15-second classification budget. General accuracy, broad prompt-injection resistance, and comprehensive performance remain unverified. HTTPX operation timeouts provide no strict end-to-end deadline.
 - Pipeline tests simulate Ollama HTTP behavior and verify real deadline expiration, cooperative cancellation, concurrent request isolation, and response compatibility. A dependency that suppresses external cancellation can let routing continue. Scheduling, blocking work, and cancellation cleanup can delay the cooperative deadline. Live enabled-mode routing, a model-unloaded request at the default classification budget, outage fallback, and same-Supervisor recovery are verified. Cold-start fallback, server-side cancellation, and production performance remain unverified.
 
-Phase 5.3 handoff:
-
-- All 57 project file hashes matched before and after full regression. Windows denied initial process-tree cleanup. All five ports were subsequently confirmed released, while complete process-tree termination remains unverified.
+Phase 5.4 handoff:
 - Phase 5.4.6 recovered LLM routing on Supervisor PID 28276 without restart or reconfiguration. The first recovered Order request took 5.5553 s. The warm semantic dispatch request selected Order via LLM in 0.6748 s. All owned agent processes exited and ports 9995–9999 were released. The original Ollama endpoint and model were verified after the final manual restart.
 - “When are you open?” correctly reaches Support but returns a clarification prompt. The standard opening-hours request returns the business hours.
-- In Codex, direct Git worktree commands may return `fatal: this operation must be run in a work tree`. Verify status and whitespace manually before committing or pushing Phase 5.4.6.
+- Phase 5.4.7 direct Git worktree checks returned `fatal: this operation must be run in a work tree`, and fetch could not write `.git/FETCH_HEAD`. Read-only `git ls-remote` confirmed the feature branch at `0a6fbe0`. Verify worktree status and whitespace locally before committing or pushing the four documentation files.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 

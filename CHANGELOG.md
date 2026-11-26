@@ -9,7 +9,7 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Completed standalone setup with Ollama 0.40.18 and `qwen3:4b` (2.5 GB download).
 - JSON mode produced incorrect or unsupported intents. JSON Schema with enum constraints passed 4/4 smoke cases, with a mean latency of 1.46 s across those cases.
 - Recorded 100% GPU offloading, 2844 MiB observed GPU memory usage, and approximately 51 tokens/sec during warm generation.
-- Performance follow-up remains open for the initial cold start (134.14 s) and refund case (4.59 s). Full benchmarking and Supervisor integration are pending.
+- Recorded standalone performance observations for the initial cold start (134.14 s) and refund case (4.59 s). At this milestone, Supervisor integration and broader benchmarking were pending.
 
 ### Phase 5.2 — Shared Local LLM Client
 
@@ -40,7 +40,7 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 #### Known Limitations
 
 - Phase 5.3 allowed isolated Unicode surrogates to reach request construction. Phase 5.4.2 resolves this.
-- Accuracy benchmarking, broader prompt-injection evaluation, cold-start verification, and default-timeout reliability are pending. Supervisor LLM integration and deterministic fallback are proposed for Phase 5.4.
+- At Phase 5.3, the seven warm standalone smoke cases did not establish accuracy, broad prompt-injection resistance, model-unloaded behavior, or default-timeout reliability. Later Phase 5.4 work added Supervisor integration and deterministic fallback.
 - Phase 5.3 was committed and pushed as `73aede3` (`feat: add structured local LLM intent classification`).
 
 ### Phase 5.4.2 — Input Validation Hardening
@@ -64,7 +64,7 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Added a classification-only `asyncio.timeout()` budget using `LLM_TIMEOUT` (default 15 seconds). The existing HTTPX operation timeouts run concurrently. Keyword fallback and specialist communication remain outside the timeout context.
 - Added stable routing-source and fallback-reason diagnostics without logging customer text or model output.
 - Passed 79 Supervisor and executor tests in 1.11 s, 152 shared validation and LLM tests in 0.69 s, 11 focused integration tests in 1.48 s, and all 334 regression tests in 4.49 s with `LLM_ENABLED=false` for the service runs.
-- The deadline is cooperative. Live enabled-mode routing, Ollama outages, cold-start fallback, server-side cancellation, and production latency remain unverified.
+- The deadline is cooperative. Phase 5.4.4 verified it with mocked inference. Phase 5.4.6 later verified live routing, outage fallback, and same-Supervisor recovery. Live cold-start timeout fallback and server-side cancellation remain unverified.
 - Committed and pushed as `f76b984` (`feat: add deterministic LLM fallback and supervisor classification deadline`).
 
 ### Phase 5.4.5 — Comprehensive Automated Testing
@@ -84,6 +84,14 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Verified automatic recovery on Supervisor PID 28276 without restart or reconfiguration. The first recovered request selected Order via LLM in 5.5553 s. The warm semantic dispatch request selected Order via LLM in 0.6748 s, where keywords select Support.
 - Passed all 361 tests in 5.59 s with Ollama unavailable at every check. Verified task-owned agent exit and port release, and confirmed Ollama and the installed model after the final manual restart.
 - “When are you open?” selected Support in both modes and returned a clarification prompt. Specialist business logic is unchanged.
+
+- Phase 5.4.6 verification was committed and pushed as `0a6fbe0`.
+
+### Phase 5.4.7 — Final Regression and Documentation
+
+- Passed all 361 tests in 5.10 s with zero failures, errors, or skips. The five Agent services and Pytest used `LLM_ENABLED=false`. Ollama remained reachable at the before and after checks.
+- Preserved the Phase 5.4.6 live verification and its 361-test offline regression in 5.59 s. No production source, tests, dependencies, or defaults changed.
+- Reconciled milestone documentation. Direct Git worktree verification, commit, and push remain pending. Phase 5.5 benchmarking remains pending.
 
 ## [0.4.0] — Supervisor Architecture
 
