@@ -36,7 +36,7 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - 361 automated tests passed
 - No paid AI API dependency
 
-Phase 5.4.6 live verification was committed and pushed as `0a6fbe0`. It verified model-unloaded and warm routing, fallback during an actual Ollama outage, automatic recovery, and keyword-only operation offline. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Phase 5.5.0.6 environment documentation and content review are complete. Phase 5.5.1 benchmarking remains pending and requires explicit user approval.
+Phase 5.4.6 live verification was committed and pushed as `0a6fbe0`. It verified model-unloaded and warm routing, fallback during an actual Ollama outage, automatic recovery, and keyword-only operation offline. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Phase 5.5.0.6 environment documentation and content review are complete. The Phase 5.5.1 benchmark foundation is implemented and pending review. Phase 5.5.2 and subsequent benchmarking require explicit user approval.
 
 ### Phase 5.1 Local LLM Environment (Previous Laptop)
 
@@ -549,6 +549,13 @@ The cold observation covers one request with the model initially unloaded. The f
 Ollama reported `qwen3:4b` (ID `359d7dd4bcda`), a 2.5 GB download, and a 2.9 GB loaded model during project inference. It reported `100% GPU`, a context of 2048, and the `llamacpp` runner. The GPU percentage describes model offloading. GPU utilization and peak VRAM were unmeasured, and no specific AMD acceleration backend was independently verified.
 
 These migration smoke tests cover six selected cases. General classification accuracy and formal Phase 5.5 benchmarking remain pending. The historical laptop and desktop timings came from different test runs without controlled comparison conditions. Phase 5.4 verified Ollama outage fallback and recovery on the same Supervisor process on the laptop. The desktop migration did not repeat those tests or download or benchmark any larger models.
+
+### Phase 5.5.1 Benchmark Foundation
+
+The [intent benchmark dataset](benchmarks/README.md) contains 200 synthetic
+messages, with 50 per intent. Codex completed semantic review. Human review,
+model scoring, and latency measurement remain pending. The schema validator
+and tests run offline.
 
 ## Current Limitations
 

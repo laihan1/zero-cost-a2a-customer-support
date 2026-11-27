@@ -106,7 +106,7 @@ Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commi
 
 Current branch: `feature/phase-5-local-llm`. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Local and remote HEAD matched at `ccf4cc89dbe13a13b237453e63cefca139b48dbf` at the Phase 5.5.0.6 pre-check.
 
-Phase 5.5.0.6 environment documentation and content review are complete. Phase 5.5.1 benchmarking remains pending and requires explicit user approval.
+Phase 5.5.0.6 environment documentation and content review are complete. The Phase 5.5.1 benchmark foundation is implemented and pending review. Phase 5.5.2 and subsequent benchmarking require explicit user approval.
 
 Implemented agents:
 
@@ -267,6 +267,8 @@ Standalone classifier:
 - The classifier enables strict completion validation, requiring `done is True` and `done_reason == "stop"`. Invalid output raises `LLMResponseError`. Existing client exceptions propagate.
 - Defaults are `LLM_ENABLED=false`, `LLM_BASE_URL=http://localhost:11434`, `LLM_MODEL=qwen3:4b`, `LLM_TIMEOUT=15.0`, `LLM_TEMPERATURE=0`, `LLM_NUM_CTX=2048`, `LLM_NUM_PREDICT=64`, `LLM_THINK=false`, and `LLM_KEEP_ALIVE=10m`.
 - Preserve backend validation and keep fallback limited to the approved error categories.
+
+Validate the fixed [benchmark dataset](benchmarks/README.md) offline before evaluation. Supply only each case's message to inference and preserve the dataset version used for scoring.
 
 Models for future benchmarking:
 

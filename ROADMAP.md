@@ -9,7 +9,7 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.4.6 live verification is committed and pushed as `0a6fbe0`. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Phase 5.5.0.6 environment documentation and content review are complete. Phase 5.5.1 benchmarking remains pending and requires explicit user approval.
+- Phase 5.4.6 live verification is committed and pushed as `0a6fbe0`. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Phase 5.5.0.6 environment documentation and content review are complete. The Phase 5.5.1 benchmark foundation is implemented and pending review. Phase 5.5.2 and subsequent benchmarking require explicit user approval.
 - Implemented agents: 5
 - Planned agents: 5
 - Desktop migration regression: 361/361 passed in 30.45 s with inference disabled and the model unloaded. The previous laptop passed 361/361 in 5.10 s for Phase 5.4.7 and 361/361 in 5.59 s during the Phase 5.4.6 Ollama outage.
@@ -197,11 +197,18 @@ Approved architecture: Use LLM-first routing with deterministic keyword fallback
 
 See the [desktop migration verification](README.md#phase-550-desktop-migration-verification) for the dated smoke test results and measurement limits.
 
-#### Phase 5.5.1 and Subsequent Benchmarking
+#### Phase 5.5.1 — Benchmark Foundation
+
+- [x] Implement the 200-case balanced dataset, labeling policy, offline validator, and tests.
+- [ ] Review and approve the foundation before starting model evaluation.
+
+See the [benchmark foundation](benchmarks/README.md) for the schema, quotas, review record, and reproducible checks.
+
+#### Phase 5.5.2 and Subsequent Benchmarking
 
 Benchmarking remains pending and requires explicit user approval.
 
-- [ ] Build a representative dataset and measure overall and per-intent accuracy, including ambiguous, multi-intent, multilingual, and prompt-injection cases.
+- [ ] Measure overall, per-intent, and per-scenario accuracy using the reviewed dataset.
 - [ ] Compare cold-start and warm inference latency. Evaluate the 400-character input limit and 15-second LLM routing deadline.
 - [ ] Compare Qwen3 4B and 8B where hardware permits. Measure CPU, GPU, RAM, and VRAM usage.
 - [ ] Document accuracy, latency, and resource trade-offs.

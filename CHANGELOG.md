@@ -101,6 +101,13 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 - Recorded the 2.5 GB download and Ollama's 2.9 GB loaded size, full GPU offloading, 2048 context, and `llamacpp` runner. These observations describe model residency. GPU utilization, peak VRAM, and the specific AMD acceleration backend remain unverified.
 - Formal benchmarking remains pending. The migration covered the installed 4B model and omitted a desktop repeat of the laptop's Ollama outage and same-process recovery tests.
 
+### Phase 5.5.1 — Benchmark Foundation
+
+- Added 200 synthetic intent cases, balanced across four labels and five scenarios, with semantic review by Codex.
+- Added a strict offline dataset validator and Pytest coverage for valid, malformed, and boundary inputs.
+- Corrected six language mismatches after Codex checked all 32 multilingual cases. Enforced four cases of each ambiguity subtype per intent and added offline tests for incorrect distributions.
+- Documented the labeling policy, review status, reproducible checks, and dataset fingerprint. Human review and model evaluation remain pending.
+
 ## [0.4.0] — Supervisor Architecture
 
 ### Added
