@@ -36,9 +36,9 @@ Phases 1–4 are complete. Phase 4 was published via Git tag `v0.4.0` at commit 
 - 361 automated tests passed
 - No paid AI API dependency
 
-Phase 5.4.6 live verification was committed and pushed as `0a6fbe0`. It verified model-unloaded and warm routing, fallback during an actual Ollama outage, automatic recovery, and keyword-only operation offline. Phase 5.4.7 final regression passed. The documentation Git checkpoint remains pending.
+Phase 5.4.6 live verification was committed and pushed as `0a6fbe0`. It verified model-unloaded and warm routing, fallback during an actual Ollama outage, automatic recovery, and keyword-only operation offline. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Phase 5.5.0.6 environment documentation and content review are complete. Phase 5.5.1 benchmarking remains pending and requires explicit user approval.
 
-### Phase 5.1 Local LLM Environment
+### Phase 5.1 Local LLM Environment (Previous Laptop)
 
 Ollama 0.40.18 served `qwen3:4b` (2.5 GB download) at `http://localhost:11434/api/chat`. The test machine used Python 3.14.7, an Intel Core i5-12450H, 16 GB RAM, and an NVIDIA GeForce RTX 4050 Laptop GPU with 6 GB VRAM. GPU offloading was 100%, observed GPU memory usage was 2844 MiB, and warm generation ran at approximately 51 tokens/sec.
 
@@ -258,7 +258,7 @@ The standalone local LLM client uses Ollama and Qwen without a paid AI API.
 
 ### Prerequisites
 
-- Python 3.14
+- Python 3.13.15 (verified on the current desktop) or Python 3.14.7 (previously verified on the laptop)
 - Git
 - Windows PowerShell or an equivalent terminal
 
@@ -399,7 +399,7 @@ python -m pytest tests/test_supervisor_llm_pipeline.py -q -p no:cacheprovider
 
 These tests exercise the real Supervisor executor, validation, intent resolver, classifier, and LLM client. HTTPX `MockTransport` supplies Ollama responses and transport failures, and the specialist call is mocked. Coverage includes all four intents, fallback, late-result rejection, deadline isolation from specialist communication, in-flight cancellation, concurrent request isolation, native A2A response parts, and application log privacy. The HTTPX timeout case tests exception mapping. Live Supervisor results are recorded below.
 
-### Latest Verified Test Results
+### Regression Test Coverage
 
 | Test Category | Passed | Total |
 |---|---:|---:|
@@ -494,12 +494,61 @@ With Ollama reachable and inference disabled, the focused A2A suite passed 11 te
 
 ### Phase 5.4.7 Final Regression
 
-The full suite passed **361 tests in 5.10 s** with zero failures, errors, or skips on the `0a6fbe0` baseline. All five Agent Cards returned HTTP 200 and all agents and Pytest used `LLM_ENABLED=false`. Ollama was reachable at both checks and was left running. The earlier Phase 5.4.6 offline result remains 361 tests in 5.59 s. The live outage test was not repeated.
+On the previous laptop, the full suite passed **361 tests in 5.10 s** with zero failures, errors, or skips on the `0a6fbe0` baseline. All five Agent Cards returned HTTP 200 and all agents and Pytest used `LLM_ENABLED=false`. Ollama was reachable at both checks and was left running. The earlier Phase 5.4.6 offline result remains 361 tests in 5.59 s. The live outage test was not repeated.
 
 ```powershell
 $env:LLM_ENABLED = "false"
 & .\.venv\Scripts\python.exe -m pytest tests/ -q -p no:cacheprovider
 ```
+
+### Phase 5.5.0 Desktop Migration Verification
+
+The migration was verified on 2026-11-26 using Windows 11, AMD Ryzen 5 7500F, 32 GB RAM, AMD Radeon RX 7600 XT with 16 GB VRAM, Python 3.13.15, and Ollama 0.40.17. Phases 5.1–5.4 verification results above were recorded on the previous Windows 11 laptop.
+
+The repository was cloned and checked out at `ccf4cc89dbe13a13b237453e63cefca139b48dbf` on `feature/phase-5-local-llm`. A fresh Python virtual environment was created, project dependencies installed, and `python -m pip check` reported no broken requirements. The migration required no production source changes.
+
+#### Full Regression
+
+```powershell
+python -m pytest tests/ -q -p no:cacheprovider
+```
+
+The suite reported `361 passed in 30.45s`. All five A2A services were running and ports 9995–9999 were reachable. The services and test run used `LLM_ENABLED=false` with the Ollama model unloaded. The initial integration run encountered connection refusals because the agent services had yet to start. The full suite passed after all five services were started.
+
+#### Live Supervisor Smoke Test
+
+Only the Supervisor enabled LLM routing. The four specialist agents ran with their existing behavior. The Supervisor used these settings:
+
+| Setting | Value |
+|---|---|
+| `LLM_ENABLED` | `true` |
+| `LLM_BASE_URL` | `http://localhost:11434` |
+| `LLM_MODEL` | `qwen3:4b` |
+| `LLM_TIMEOUT` | `15` |
+| `LLM_TEMPERATURE` | `0` |
+| `LLM_NUM_CTX` | `2048` |
+| `LLM_NUM_PREDICT` | `64` |
+| `LLM_THINK` | `false` |
+| `LLM_KEEP_ALIVE` | `10m` |
+
+| Test | Expected intent | Actual intent | End-to-end A2A latency |
+|---|---|---|---:|
+| Cold Order | order | order | 12.7035 s |
+| Warm Order | order | order | 1.2152 s |
+| Semantic Order | order | order | 1.2870 s |
+| Support | support | support | 1.2303 s |
+| Refund | refund | refund | 1.6385 s |
+| Product | product | product | 1.2011 s |
+
+All six requests routed correctly, returned HTTP 200, and produced the expected business responses with structured `success=true` and `error_code=null`. Supervisor recorded `routing_source=llm` in all six cases with zero keyword fallbacks. The semantic enquiry “Has ORD001 been dispatched yet?” routed to Order and returned the shipped order information.
+
+The cold observation covers one request with the model initially unloaded. The five warm requests span several enquiry types. Their end-to-end A2A latency averaged 1.31442 s, with a median of 1.2303 s and a range of 1.2011–1.6385 s. These measurements cover the entire A2A request. Isolated LLM inference time was unmeasured.
+
+#### Ollama Model Residency
+
+Ollama reported `qwen3:4b` (ID `359d7dd4bcda`), a 2.5 GB download, and a 2.9 GB loaded model during project inference. It reported `100% GPU`, a context of 2048, and the `llamacpp` runner. The GPU percentage describes model offloading. GPU utilization and peak VRAM were unmeasured, and no specific AMD acceleration backend was independently verified.
+
+These migration smoke tests cover six selected cases. General classification accuracy and formal Phase 5.5 benchmarking remain pending. The historical laptop and desktop timings came from different test runs without controlled comparison conditions. Phase 5.4 verified Ollama outage fallback and recovery on the same Supervisor process on the laptop. The desktop migration did not repeat those tests or download or benchmark any larger models.
 
 ## Current Limitations
 
@@ -513,7 +562,7 @@ $env:LLM_ENABLED = "false"
 - Persistent conversation memory is not implemented.
 - Authentication and authorization are not implemented.
 - Full A2A task lifecycle and cancellation are not implemented.
-- Clean-environment installation and CI-based regression remain unverified.
+- A fresh virtual environment and dependency installation were verified on the desktop. CI-based regression remains unverified.
 - Automated tests do not cover all failure scenarios.
 
 ## Development Roadmap
@@ -524,7 +573,7 @@ $env:LLM_ENABLED = "false"
 | 2 | Order Agent and Communication | Completed |
 | 3 | Multi-Agent Collaboration | Completed |
 | 4 | Supervisor Agent and Architecture | Completed and published via Git tag `v0.4.0` |
-| 5 | Local LLM Integration | Phase 5.4.7 regression passed and documentation reconciled. Git checkpoint pending. |
+| 5 | Local LLM Integration | Phase 5.5.0 desktop migration verified. Environment documentation and content review complete. |
 | 6 | Database and Frontend | Planned |
 | 7 | Deployment and Portfolio Release | Planned |
 

@@ -9,10 +9,10 @@ The project demonstrates practical AI engineering, multi-agent communication, in
 ## Current Progress
 
 - Development stage: Phases 1–4 complete. Phase 4 was published via Git tag `v0.4.0` at commit `cf17927`.
-- Phase 5.4.6 live verification is committed and pushed as `0a6fbe0`. Phase 5.4.7 final regression and documentation reconciliation are complete. The Git checkpoint remains pending.
+- Phase 5.4.6 live verification is committed and pushed as `0a6fbe0`. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Phase 5.5.0.6 environment documentation and content review are complete. Phase 5.5.1 benchmarking remains pending and requires explicit user approval.
 - Implemented agents: 5
 - Planned agents: 5
-- Final regression: 361/361 passed in 5.10 s with inference disabled. The Phase 5.4.6 offline run remains 361/361 in 5.59 s.
+- Desktop migration regression: 361/361 passed in 30.45 s with inference disabled and the model unloaded. The previous laptop passed 361/361 in 5.10 s for Phase 5.4.7 and 361/361 in 5.59 s during the Phase 5.4.6 Ollama outage.
 - Paid AI API cost: RM0
 - Current architecture: Supervisor-based multi-agent system with shared A2A components
 
@@ -182,12 +182,27 @@ Approved architecture: Use LLM-first routing with deterministic keyword fallback
 - [x] 5.4.6 — Verify live cold and warm routing, semantic differences, native response compatibility, actual Ollama outage fallback, and automatic recovery on the same Supervisor. Pass all 361 tests with Ollama unavailable and inference disabled.
 - [x] 5.4.6 — Complete Git checkpoint (`0a6fbe0`).
 - [x] 5.4.7 — Pass the final full regression and reconcile documentation.
-- [ ] 5.4.7 — Verify the real Git worktree, commit the documentation, and push and verify the checkpoint.
+- [x] 5.4.7 — Verify the Git checkpoint (`ccf4cc8`). Local and remote HEAD matched at the Phase 5.5.0.6 pre-check.
 
 ### Phase 5.5 — Accuracy and Performance Benchmarking
 
+#### Phase 5.5.0 — New Machine Migration and Environment Verification
+
+- [x] 5.5.0.1 — GitHub Migration. Verified the fresh clone, feature branch, and expected commit.
+- [x] 5.5.0.2 — Python Environment. Verified a fresh Python 3.13.15 virtual environment, dependency installation, and `pip check`.
+- [x] 5.5.0.3 — Full Regression Verification. Passed all 361 tests in 30.45 s with five A2A services available, LLM routing disabled, and the Ollama model unloaded.
+- [x] 5.5.0.4 — AMD GPU Verification. Ollama reported full model offloading on the desktop. GPU utilization, peak VRAM, and the acceleration backend were outside verification.
+- [x] 5.5.0.5 — Live LLM Integration. All six Supervisor requests routed correctly through `qwen3:4b` with zero fallbacks.
+- [x] 5.5.0.6 — Environment Documentation. Documentation and content review complete.
+
+See the [desktop migration verification](README.md#phase-550-desktop-migration-verification) for the dated smoke test results and measurement limits.
+
+#### Phase 5.5.1 and Subsequent Benchmarking
+
+Benchmarking remains pending and requires explicit user approval.
+
 - [ ] Build a representative dataset and measure overall and per-intent accuracy, including ambiguous, multi-intent, multilingual, and prompt-injection cases.
-- [ ] Compare cold-start and warm inference latency. Evaluate the 400-character input limit and 15-second HTTPX timeout.
+- [ ] Compare cold-start and warm inference latency. Evaluate the 400-character input limit and 15-second LLM routing deadline.
 - [ ] Compare Qwen3 4B and 8B where hardware permits. Measure CPU, GPU, RAM, and VRAM usage.
 - [ ] Document accuracy, latency, and resource trade-offs.
 

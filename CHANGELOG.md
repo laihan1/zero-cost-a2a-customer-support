@@ -91,7 +91,15 @@ All notable changes to the Zero-Cost A2A Customer Support System will be documen
 
 - Passed all 361 tests in 5.10 s with zero failures, errors, or skips. The five Agent services and Pytest used `LLM_ENABLED=false`. Ollama remained reachable at the before and after checks.
 - Preserved the Phase 5.4.6 live verification and its 361-test offline regression in 5.59 s. No production source, tests, dependencies, or defaults changed.
-- Reconciled milestone documentation. Direct Git worktree verification, commit, and push remain pending. Phase 5.5 benchmarking remains pending.
+- Reconciled milestone documentation in `ccf4cc8`. Local and remote HEAD matched at the Phase 5.5.0.6 pre-check.
+
+### Phase 5.5.0.6 — New Machine Environment Documentation
+
+- Documented the 2026-11-26 migration from the Windows 11 Intel/NVIDIA laptop to a desktop running Windows 11, AMD Ryzen 5 7500F, 32 GB RAM, AMD Radeon RX 7600 XT with 16 GB VRAM, Python 3.13.15, and Ollama 0.40.17. Preserved the laptop verification results.
+- Verified a fresh clone, Python virtual environment, dependency installation, and a clean `pip check`. The full regression passed 361 tests in 30.45 s with all five A2A services running, LLM routing disabled, and the model unloaded.
+- Verified six live A2A smoke cases with `qwen3:4b` (ID `359d7dd4bcda`). All returned HTTP 200, routed correctly via LLM, and succeeded without fallback. The model-unloaded request took 12.7035 s end to end. The five warm requests averaged 1.31442 s.
+- Recorded the 2.5 GB download and Ollama's 2.9 GB loaded size, full GPU offloading, 2048 context, and `llamacpp` runner. These observations describe model residency. GPU utilization, peak VRAM, and the specific AMD acceleration backend remain unverified.
+- Formal benchmarking remains pending. The migration covered the installed 4B model and omitted a desktop repeat of the laptop's Ollama outage and same-process recovery tests.
 
 ## [0.4.0] — Supervisor Architecture
 

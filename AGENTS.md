@@ -51,22 +51,18 @@ Current development environment:
 - Operating system: Windows 11
 - Editor: Visual Studio Code
 - Terminal: PowerShell
-- Python: 3.14.7
-- CPU: Intel Core i5-12450H
-- RAM: 16GB
-- GPU: NVIDIA GeForce RTX 4050 Laptop GPU
-- VRAM: 6GB
+- Python: 3.13.15
+- CPU: AMD Ryzen 5 7500F
+- RAM: 32 GB
+- GPU: AMD Radeon RX 7600 XT
+- VRAM: 16 GB
+- Ollama: 0.40.17
 
-Local project directory:
+Previous verification environment for Phases 5.1–5.4: Windows 11 laptop with an Intel Core i5-12450H, 16 GB RAM, an NVIDIA GeForce RTX 4050 Laptop GPU with 6 GB VRAM, Python 3.14.7, and Ollama 0.40.18.
 
-```powershell
-C:\Users\user\Documents\zero-cost-a2a-customer-support
-```
-
-For every newly opened local terminal:
+Open each new PowerShell terminal at the root of your local clone and activate the project virtual environment:
 
 ```powershell
-cd C:\Users\user\Documents\zero-cost-a2a-customer-support
 .\.venv\Scripts\Activate.ps1
 ```
 
@@ -108,9 +104,9 @@ Approved Phase 5.4 design: use LLM-first routing with deterministic keyword fall
 
 Released baseline: Phase 4 completed and published via Git tag `v0.4.0` at commit `cf17927`.
 
-Current branch: `feature/phase-5-local-llm`. The confirmed committed baseline for Phase 5.4.7 is `0a6fbe0` (`docs: verify live Ollama routing, outage fallback and automatic recovery`), which matched the live remote branch.
+Current branch: `feature/phase-5-local-llm`. The Phase 5.4.7 documentation checkpoint was committed as `ccf4cc8` after regression verification on `0a6fbe0`. Local and remote HEAD matched at `ccf4cc89dbe13a13b237453e63cefca139b48dbf` at the Phase 5.5.0.6 pre-check.
 
-Phase 5.4.6 is complete, committed, and pushed. Phase 5.4.7 final regression and documentation reconciliation are complete. Its documentation-only Git checkpoint remains pending. Phase 5.5 benchmarking requires user approval.
+Phase 5.5.0.6 environment documentation and content review are complete. Phase 5.5.1 benchmarking remains pending and requires explicit user approval.
 
 Implemented agents:
 
@@ -138,7 +134,7 @@ Current capabilities:
 - Centralized communication error handling and structured response validation.
 - Configurable console logging using LOG_LEVEL (default INFO).
 
-Verified test baselines:
+Verified test baselines (Phases 4–5.4 used the previous laptop):
 
 - Phase 4 release: 126 automated tests passed.
 - Phase 5.2: 63 LLM unit tests passed in 0.27 s and all 189 regression tests passed in 3.66 s.
@@ -157,6 +153,8 @@ Verified test baselines:
 - Phase 5.4.6: cold request 9.4827 s with LLM routing. All 12 warm cases used LLM routing (mean 0.5953 s end to end). All four offline workflows passed with enabled keyword fallback and with disabled keyword routing. The disabled full regression passed 361 tests in 5.87 s with Ollama reachable and 361 in 5.59 s with Ollama unavailable.
 
 - Phase 5.4.7: 361 regression tests passed in 5.10 s with zero failures, errors, or skips. All five Agent Cards returned HTTP 200. Services and Pytest used `LLM_ENABLED=false`. Ollama was reachable at the before and after checks.
+
+- Phase 5.5.0 desktop migration (2026-11-26): 361 regression tests passed in 30.45 s with all five agents reachable, `LLM_ENABLED=false`, and the model unloaded. All six live Supervisor smoke cases routed correctly via `qwen3:4b` with zero fallbacks. See the [desktop migration verification](README.md#phase-550-desktop-migration-verification) for settings, timings, and limitations.
 
 Always verify the latest implementation status using the roadmap, source code, Git history, and current test results.
 
@@ -281,7 +279,7 @@ Requirements:
 - Compare models using actual benchmarks.
 - Measure intent classification accuracy.
 - Measure response latency.
-- Monitor RAM and VRAM usage.
+- Monitor RAM and VRAM usage with tools available for the current hardware. Confirm support on the AMD desktop before selecting a GPU monitoring tool. Record Ollama model residency separately from measured utilization and peak VRAM.
 - Validate structured model outputs.
 - Provide a deterministic fallback when the LLM is unavailable.
 - Prevent the LLM from inventing business data.
@@ -459,7 +457,7 @@ Current system limitations:
 - No actual refund transactions.
 - Automated tests do not cover every failure scenario.
 - No automatic retry or complete A2A task response handling.
-- Clean-environment installation and CI-based regression remain unverified.
+- A fresh virtual environment and dependency installation were verified on the desktop. CI-based regression remains unverified.
 
 LLM verification boundaries:
 
@@ -469,7 +467,7 @@ LLM verification boundaries:
 Phase 5.4 handoff:
 - Phase 5.4.6 recovered LLM routing on Supervisor PID 28276 without restart or reconfiguration. The first recovered Order request took 5.5553 s. The warm semantic dispatch request selected Order via LLM in 0.6748 s. All owned agent processes exited and ports 9995–9999 were released. The original Ollama endpoint and model were verified after the final manual restart.
 - “When are you open?” correctly reaches Support but returns a clarification prompt. The standard opening-hours request returns the business hours.
-- Phase 5.4.7 direct Git worktree checks returned `fatal: this operation must be run in a work tree`, and fetch could not write `.git/FETCH_HEAD`. Read-only `git ls-remote` confirmed the feature branch at `0a6fbe0`. Verify worktree status and whitespace locally before committing or pushing the four documentation files.
+- Phase 5.4.7 worktree access issues were observed before its documentation checkpoint. The Phase 5.5.0.6 pre-check verified worktree access, a clean status, and `git diff --check` at `ccf4cc8`.
 
 Consult the latest source code and documentation to determine which limitations have been resolved.
 
